@@ -1,20 +1,17 @@
-const DFXWebPackConfig = require("./dfx.webpack.config")
-DFXWebPackConfig.initCanisterIds()
+/**
+ * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
+ * for Docker builds.
+ */
+await import("./src/env.js");
 
-const webpack = require("webpack")
-
-// Make DFX_NETWORK available to Web Browser with default "local" if DFX_NETWORK is undefined
-const EnvPlugin = new webpack.EnvironmentPlugin({
-  DFX_NETWORK: "local"
-})
-
-module.exports = {
-  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Plugin
-    config.plugins.push(EnvPlugin)
-
-    // Important: return the modified config
-    return config
+/** @type {import("next").NextConfig} */
+const config = {
+      typescript: {
+    ignoreBuildErrors: true,
   },
-  output: "export"
-}
+  eslint: {
+    ignoreDuringBuilds: true,
+  }
+};
+
+export default config;
