@@ -1,6 +1,10 @@
+// @ts-nocheck
+
 const path = require("path")
 
-let localCanisters, prodCanisters, canisters
+let localCanisters = undefined
+let prodCanisters = undefined
+let canisters
 
 function initCanisterIds() {
   try {
