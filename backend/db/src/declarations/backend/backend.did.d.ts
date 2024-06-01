@@ -94,6 +94,13 @@ export interface Space {
   'minVotePower' : bigint,
   'quorum' : number,
 }
+export interface SpaceEvent {
+  'id' : number,
+  'eventtype' : number,
+  'spaceId' : number,
+  'payload' : string,
+  'webhookUrl' : string,
+}
 export interface Strategy {
   'id' : number,
   'name' : string,
@@ -108,10 +115,13 @@ export interface _SERVICE {
   'delete_proposal_option' : ActorMethod<[GetByIdParams], Result>,
   'delete_proposal_option_vote' : ActorMethod<[GetByIdParams], Result>,
   'delete_space' : ActorMethod<[GetByIdParams], Result>,
+  'delete_space_event' : ActorMethod<[GetByIdParams], Result>,
   'delete_strategy' : ActorMethod<[GetByIdParams], Result>,
   'drop' : ActorMethod<[], Result>,
   'get_all_btc_strategies_by_space_id' : ActorMethod<[GetByIdParams], Result>,
   'get_all_evm_strategies_by_space_id' : ActorMethod<[GetByIdParams], Result>,
+  'get_all_space_events' : ActorMethod<[], Result>,
+  'get_all_space_events_by_space_id' : ActorMethod<[GetByIdParams], Result>,
   'get_proposal_option_by_user_adress_and_proposal_id' : ActorMethod<
     [GetByAdressAndIdParams],
     Result
@@ -132,6 +142,7 @@ export interface _SERVICE {
     Result
   >,
   'insert_space' : ActorMethod<[Space], Result>,
+  'insert_space_event' : ActorMethod<[SpaceEvent], Result>,
   'query_all_spaces' : ActorMethod<[QueryParams], Result>,
   'query_proposal_by_id' : ActorMethod<[GetByIdParams], Result>,
   'query_proposals_by_space_id' : ActorMethod<[GetByIdParams], Result>,

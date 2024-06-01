@@ -55,6 +55,13 @@ export const idlFactory = ({ IDL }) => {
     'minVotePower' : IDL.Nat64,
     'quorum' : IDL.Nat32,
   });
+  const SpaceEvent = IDL.Record({
+    'id' : IDL.Nat32,
+    'eventtype' : IDL.Nat32,
+    'spaceId' : IDL.Nat32,
+    'payload' : IDL.Text,
+    'webhookUrl' : IDL.Text,
+  });
   const QueryParams = IDL.Record({ 'offset' : IDL.Nat32, 'limit' : IDL.Nat32 });
   return IDL.Service({
     'create' : IDL.Func([], [Result], []),
@@ -63,6 +70,7 @@ export const idlFactory = ({ IDL }) => {
     'delete_proposal_option' : IDL.Func([GetByIdParams], [Result], []),
     'delete_proposal_option_vote' : IDL.Func([GetByIdParams], [Result], []),
     'delete_space' : IDL.Func([GetByIdParams], [Result], []),
+    'delete_space_event' : IDL.Func([GetByIdParams], [Result], []),
     'delete_strategy' : IDL.Func([GetByIdParams], [Result], []),
     'drop' : IDL.Func([], [Result], []),
     'get_all_btc_strategies_by_space_id' : IDL.Func(
@@ -71,6 +79,12 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'get_all_evm_strategies_by_space_id' : IDL.Func(
+        [GetByIdParams],
+        [Result],
+        ['query'],
+      ),
+    'get_all_space_events' : IDL.Func([], [Result], ['query']),
+    'get_all_space_events_by_space_id' : IDL.Func(
         [GetByIdParams],
         [Result],
         ['query'],
@@ -99,6 +113,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'insert_space' : IDL.Func([Space], [Result], []),
+    'insert_space_event' : IDL.Func([SpaceEvent], [Result], []),
     'query_all_spaces' : IDL.Func([QueryParams], [Result], ['query']),
     'query_proposal_by_id' : IDL.Func([GetByIdParams], [Result], ['query']),
     'query_proposals_by_space_id' : IDL.Func(

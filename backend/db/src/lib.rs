@@ -502,6 +502,86 @@ fn get_all_evm_strategies_by_space_id(params: GetByIdParams) -> Result {
     Ok(res)
 }
 
+
+#[query]
+fn get_all_space_events_by_space_id(params: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    let mut stmt = match conn.prepare(
+        "
+        select id, eventtype, webhookurl, payload, spaceid from SpaceEvents where SpaceID = ?1;
+
+    ",
+    ) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let strategies_iter = match stmt.query_map([params.id], |row| {
+        Ok(SpaceEvent {
+            id: row.get(0).unwrap(),
+            eventtype: row.get(1).unwrap(),
+            webhookUrl: row.get(2).unwrap(),
+            payload: row.get(3).unwrap(),
+            spaceId: row.get(4).unwrap(),
+        })
+    }) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let mut strategies = Vec::new();
+    for strategy in strategies_iter {
+        strategies.push(strategy.unwrap());
+    }
+    let res = serde_json::to_string(&strategies).unwrap();
+    Ok(res)
+}#[query]
+
+fn get_all_space_events() -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    let mut stmt = match conn.prepare(
+        "
+        select id, eventtype, webhookurl, payload, spaceid from SpaceEvents;
+
+    ",
+    ) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let strategies_iter = match stmt.query_map([], |row| {
+        Ok(SpaceEvent {
+            id: row.get(0).unwrap(),
+            eventtype: row.get(1).unwrap(),
+            webhookUrl: row.get(2).unwrap(),
+            payload: row.get(3).unwrap(),
+            spaceId: row.get(4).unwrap(),
+        })
+    }) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let mut strategies = Vec::new();
+    for strategy in strategies_iter {
+        strategies.push(strategy.unwrap());
+    }
+    let res = serde_json::to_string(&strategies).unwrap();
+    Ok(res)
+}
+
 // #[query]
 // fn query_filter(params: FilterParams) -> Result {
 //     let conn = ic_sqlite::CONN.lock().unwrap();
@@ -761,7 +841,49 @@ fn insert_proposal_block(block: InsertProposalBlock) -> Result {
     };
 }
 
-//
+
+#[update]
+fn insert_space_event(spaceEvents: SpaceEvent) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    if spaceEvents.id != 0 {
+        return match conn.execute(
+            "UPDATE SpaceEvents set
+            eventtype = ?2,
+            webhookurl = ?3,
+            payload = ?4,
+            spaceId = ?5
+        where Id = ?1;",
+            (
+                spaceEvents.id,
+                spaceEvents.eventtype,
+                spaceEvents.webhookUrl,
+                spaceEvents.payload,
+                spaceEvents.spaceId,
+            ),
+        ) {
+            Ok(e) => Ok(format!("{:?}", e)),
+            Err(err) => Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            }),
+        };
+    }
+    return match conn.execute(
+        "insert into SpaceEvents(eventtype, webhookurl, payload, spaceid) values(?1,?2,?3,?4);",
+        (
+            spaceEvents.eventtype,
+            spaceEvents.webhookUrl,
+            spaceEvents.payload,
+            spaceEvents.spaceId,
+        ),
+    ) {
+        Ok(e) => Ok(format!("{:?}", e)),
+        Err(err) => Err(Error::CanisterError {
+            message: format!("{:?}", err),
+        }),
+    };
+}
+
+
 #[update]
 fn delete_space(id: GetByIdParams) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
@@ -826,7 +948,18 @@ fn delete_strategy(id: GetByIdParams) -> Result {
             message: format!("{:?}", err),
         }),
     };
-}   
+}
+
+#[update]
+fn delete_space_event(id: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    return match conn.execute("DELETE FROM SpaceEvents WHERE Id = ?1;", (id.id,)) {
+        Ok(e) => Ok(format!("{:?}", e)),
+        Err(err) => Err(Error::CanisterError {
+            message: format!("{:?}", err),
+        }),
+    };
+} 
 
 // #[update]
 // fn delete(id: usize) -> Result {
@@ -967,6 +1100,16 @@ struct GetEvmStrategy {
     contractAddress: String,
     configString: String,
 }
+
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct SpaceEvent {
+    id: u32,
+    eventtype: u32,
+    webhookUrl: String,
+    payload: String,
+    spaceId: u32,
+}
+
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct QueryParams {
