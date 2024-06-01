@@ -97,7 +97,7 @@ fn create() -> Result {
        CREATE TABLE ProposalBlocks(
         Id INTEGER NOT NULL CONSTRAINT PK_Proposals PRIMARY KEY AUTOINCREMENT,
         Type INTEGER NOT NULL,
-        ChainId INTEGER NOT NULL,
+        ChainId INTEGER NULL,
         BlockNumber INTEGER NOT NULL,
         ProposalID INTEGER NOT NULL,
         CONSTRAINT FK_ProposalBlocks_Proposals_BtcId FOREIGN KEY (ProposalID) REFERENCES Proposals (Id) ON DELETE CASCADE
@@ -700,6 +700,25 @@ fn insert_proposal_option_vote(vote: InsertProposalOptionVote) -> Result {
     };
 }
 
+#[update]
+fn insert_proposal_block(block: InsertProposalBlock) -> Result{
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    return match conn.execute(
+        "insert into ProposalBlocks(type, chainid, blocknumber, ProposalID)
+        values (?1, ?2, ?3, ?4);",
+        (
+          block.voteType, block.chainId, block.blocknumber, block.proposalID
+        ),
+    ) {
+        Ok(e) => Ok(format!("{:?}", e)),
+        Err(err) => Err(Error::CanisterError {
+            message: format!("{:?}", err),
+        }),
+    };
+}
+
+
+
 // #[update]
 // fn delete(id: usize) -> Result {
 //     let conn = ic_sqlite::CONN.lock().unwrap();
@@ -762,7 +781,7 @@ struct Proposal {
     title: String,
     description: String,
     dateCreated: usize,
-    mechanism: String,
+    mechanism: usize,
     // space: Option<Space>,
     spaceId: usize,
     // options: Vec<ProposalOption>,
@@ -891,7 +910,7 @@ struct InsertEvmStrategy {
 struct InsertProposolaWithOption {
     title: String,
     description: String,
-    mechanism: String,
+    mechanism: usize,
     dateCreated: usize,
     spaceId: usize,
     commaSeparatedOptions: String,
@@ -900,13 +919,21 @@ struct InsertProposolaWithOption {
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct InsertProposalOptionVote {
     userAddress: String,
-    voteType: String,
+    voteType: usize,
     timestamp: usize,
     signature: String,
     votingPower: usize,
     optionId: usize,
 }
 
+
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct InsertProposalBlock {
+    voteType: usize,
+    chainId: Option<usize>,
+    blocknumber: usize,
+    proposalID: usize,
+}
 //----------------- Selects -----------------
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]

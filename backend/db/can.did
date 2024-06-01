@@ -88,7 +88,7 @@ type GetEvmStrategy = record {
 type InsertProposolaWithOption = record {
     title: text;
     description: text;
-    mechanism: text;
+    mechanism: nat32;
     dateCreated: nat32;
     spaceId: nat32;
     commaSeparatedOptions: text;
@@ -103,12 +103,20 @@ type InsertProposalOptionVote = record {
     optionId: nat32;
 };
 
+
+type InsertProposalBlock = record {
+    voteType: nat64;
+    chainId: opt nat64;
+    blocknumber: nat64;
+    proposalID: nat64;
+};
+
 type Proposal = record {
     id: nat32;
     title: text;
     description: text;
     dateCreated: nat32;
-    mechanism: text;
+    mechanism: nat32;
     spaceId: nat32;
 };
 
@@ -121,10 +129,10 @@ type ProposalOption = record {
 type ProposalOptionVote = record {
     id: nat32;
     userAddress: text;
-    voteType: text;
+    voteType: nat32;
     timestamp: nat32;
     signature: text;
-    votingPower: nat64;
+    votingPower: nat32;
     optionId: nat32;
 };
 
@@ -145,4 +153,5 @@ service : {
     "insert_evm_strategy": (InsertEvmStrategy) -> (Result);
     "insert_proposal_with_option": (InsertProposolaWithOption) -> (Result);
     "insert_proposal_option_vote": (InsertProposalOptionVote) -> (Result);
+    "insert_proposal_block": (InsertProposalBlock) -> (Result);
 }
