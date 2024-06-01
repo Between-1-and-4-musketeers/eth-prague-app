@@ -1,0 +1,163 @@
+type Error = variant {
+    InvalidCanister;
+    CanisterError : record {
+        message : text;
+    };
+};
+
+type Result = variant {
+    Ok: text;
+    Err : Error;
+};
+
+type Space = record {
+    id: nat32;
+    name: text;
+    iconLink : text;
+    websiteLink : text;
+    voteDelay: nat32;
+    voteDuration: nat32;
+    minVoteRole: nat32;
+    minVotePower: nat64;
+    quorum: nat32;
+};
+
+
+type Strategy = record {
+    id: nat32;
+    name: text;
+    spaceId: nat32;
+    btcId: nat32;
+    evmId: nat32;
+};
+
+
+type BtcStrategy = record {
+    id: nat32;
+    runeId: text;
+};
+
+type QueryParams = record {
+    limit: nat32;
+    offset: nat32;
+};
+
+type GetByIdParams = record {
+    id: nat32;
+};
+
+type GetByAdressAndIdParams = record {
+    id: nat32;
+    address: text;
+};
+
+type InsertBtcStrategy = record {
+    name: text;
+    spaceId: nat32;
+    runeId: text;
+};
+
+type GetBtcStrategy = record {
+    id: nat32;
+    name: text;
+    description: text;
+    spaceId: nat32;
+    runeId: text;
+};
+
+type InsertEvmStrategy = record {
+    name: text;
+    description: text;
+    spaceId: nat32;
+    chainId: nat64;
+    contractAddress: text;
+    configString: text;
+};
+
+
+type GetEvmStrategy = record {
+    id: nat32;
+    name: text;
+    description: text;
+    spaceId: nat32;
+    chainId: nat64;
+    contractAddress: text;
+    configString: text;
+};
+
+type InsertProposolaWithOption = record {
+    title: text;
+    description: text;
+    mechanism: nat32;
+    dateCreated: nat32;
+    spaceId: nat32;
+    commaSeparatedOptions: text;
+};
+
+type InsertProposalOptionVote = record {
+    userAddress: text;
+    voteType: nat32;
+    timestamp: nat32;
+    signature: text;
+    votingPower: nat64;
+    optionId: nat32;
+};
+
+
+type InsertProposalBlock = record {
+    voteType: nat32;
+    chainId: opt nat64;
+    blocknumber: nat32;
+    proposalID: nat32;
+};
+
+type Proposal = record {
+    id: nat32;
+    title: text;
+    description: text;
+    dateCreated: nat32;
+    mechanism: nat32;
+    spaceId: nat32;
+};
+
+type ProposalOption = record {
+    id: nat32;
+    name: text;
+    proposalId: nat32;
+};
+
+type ProposalOptionVote = record {
+    id: nat32;
+    userAddress: text;
+    voteType: nat32;
+    timestamp: nat32;
+    signature: text;
+    votingPower: nat64;
+    optionId: nat32;
+};
+
+
+service : {
+    "create": () -> (Result);
+    "drop": () -> (Result);
+    "query_all_spaces": (QueryParams) -> (Result) query;
+    "query_spaces_by_id": (GetByIdParams) -> (Result) query;
+    "query_proposal_by_id": (GetByIdParams) -> (Result) query;
+    "query_proposals_by_space_id": (GetByIdParams) -> (Result) query;
+    "get_proposals_with_voting_power_by_proposal_id": (GetByIdParams) -> (Result) query;
+    "get_proposal_option_by_user_adress_and_proposal_id": (GetByAdressAndIdParams) -> (Result) query;
+    "get_all_btc_strategies_by_space_id": (GetByIdParams) -> (Result) query;
+    "get_all_evm_strategies_by_space_id": (GetByIdParams) -> (Result) query;
+    "insert_space": (Space) -> (Result);
+    "insert_btc_strategy": (InsertBtcStrategy) -> (Result);
+    "insert_evm_strategy": (InsertEvmStrategy) -> (Result);
+    "insert_proposal_with_option": (InsertProposolaWithOption) -> (Result);
+    "insert_proposal_option_vote": (InsertProposalOptionVote) -> (Result);
+    "insert_proposal_block": (InsertProposalBlock) -> (Result);
+    "delete_space": (GetByIdParams) -> (Result);
+    "delete_proposal": (GetByIdParams) -> (Result);
+    "delete_proposal_option": (GetByIdParams) -> (Result);
+    "delete_proposal_option_vote": (GetByIdParams) -> (Result);
+    "delete_strategy": (GetByIdParams) -> (Result);
+    "delete_proposal_block": (GetByIdParams) -> (Result);
+}

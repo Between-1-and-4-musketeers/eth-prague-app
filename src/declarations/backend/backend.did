@@ -1,0 +1,69 @@
+type Error = variant {
+    InvalidCanister;
+    CanisterError : record {
+        message : text;
+    };
+};
+
+type Result = variant {
+    Ok: text;
+    Err : Error;
+};
+
+type Space = record {
+    id: nat64;
+    name: text;
+    iconLink : text;
+    websiteLink : text;
+    voteDelay: nat64;
+    voteDuration: nat64;
+    minVoteRole: nat64;
+    minVotePower: nat64;
+    quorum: nat64;
+};
+
+
+type Strategy = record {
+    id: nat64;
+    name: text;
+    spaceId: nat64;
+    btcId: nat64;
+    evmId: nat64;
+};
+
+
+type BtcStrategy = record {
+    id: nat64;
+    runeId: text;
+};
+
+type QueryParams = record {
+    limit: nat64;
+    offset: nat64;
+};
+
+
+type InsertBtcStrategy = record {
+    name: text;
+    spaceId: nat64;
+    runeId: text;
+};
+
+type InsertEvmStrategy = record {
+    name: text;
+    spaceId: nat64;
+    chainId: nat64;
+    contactAddress: text;
+    configString: text;
+};
+
+
+service : {
+    "create": () -> (Result);
+    "drop": () -> (Result);
+    "query_all_spaces": (QueryParams) -> (Result) query;
+    "get_proposals_voting_power": (QueryParams) -> (Result) query;
+    "insert_space": (Space) -> (Result);
+    "insert_btc_strategy": (InsertBtcStrategy) -> (Result);
+    "insert_evm_strategy": (InsertEvmStrategy) -> (Result);
+}
