@@ -841,7 +841,7 @@ struct ProposalOption {
 struct ProposalOptionVote {
     id: u32,
     userAddress: String,
-    voteType: String,
+    voteType: u32,
     timestamp: u32,
     signature: String,
     votingPower: u64,

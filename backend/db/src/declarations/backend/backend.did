@@ -96,7 +96,7 @@ type InsertProposolaWithOption = record {
 
 type InsertProposalOptionVote = record {
     userAddress: text;
-    voteType: text;
+    voteType: nat32;
     timestamp: nat32;
     signature: text;
     votingPower: nat64;

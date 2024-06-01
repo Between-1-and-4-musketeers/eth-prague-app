@@ -45,7 +45,7 @@ export interface InsertProposalBlock {
 export interface InsertProposalOptionVote {
   'signature' : string,
   'optionId' : number,
-  'voteType' : string,
+  'voteType' : number,
   'votingPower' : bigint,
   'userAddress' : string,
   'timestamp' : number,

@@ -31,7 +31,7 @@ export const idlFactory = ({ IDL }) => {
   const InsertProposalOptionVote = IDL.Record({
     'signature' : IDL.Text,
     'optionId' : IDL.Nat32,
-    'voteType' : IDL.Text,
+    'voteType' : IDL.Nat32,
     'votingPower' : IDL.Nat64,
     'userAddress' : IDL.Text,
     'timestamp' : IDL.Nat32,
