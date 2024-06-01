@@ -5,6 +5,7 @@ import type { IDL } from '@dfinity/candid';
 export interface BtcStrategy { 'id' : bigint, 'runeId' : string }
 export type Error = { 'CanisterError' : { 'message' : string } } |
   { 'InvalidCanister' : null };
+export interface GetByIdParams { 'id' : bigint }
 export interface InsertBtcStrategy {
   'runeId' : string,
   'name' : string,
@@ -16,6 +17,14 @@ export interface InsertEvmStrategy {
   'spaceId' : bigint,
   'chainId' : bigint,
   'contactAddress' : string,
+}
+export interface InsertProposolaWithOption {
+  'title' : string,
+  'mechanism' : string,
+  'dateCreated' : bigint,
+  'description' : string,
+  'spaceId' : bigint,
+  'commaSeparatedOptions' : string,
 }
 export interface QueryParams { 'offset' : bigint, 'limit' : bigint }
 export type Result = { 'Ok' : string } |
@@ -44,8 +53,14 @@ export interface _SERVICE {
   'get_proposals_voting_power' : ActorMethod<[QueryParams], Result>,
   'insert_btc_strategy' : ActorMethod<[InsertBtcStrategy], Result>,
   'insert_evm_strategy' : ActorMethod<[InsertEvmStrategy], Result>,
+  'insert_proposal_with_option' : ActorMethod<
+    [InsertProposolaWithOption],
+    Result
+  >,
   'insert_space' : ActorMethod<[Space], Result>,
   'query_all_spaces' : ActorMethod<[QueryParams], Result>,
+  'query_proposals_by_space_id' : ActorMethod<[GetByIdParams], Result>,
+  'query_spaces_by_id' : ActorMethod<[GetByIdParams], Result>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

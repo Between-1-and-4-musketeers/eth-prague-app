@@ -17,6 +17,14 @@ export const idlFactory = ({ IDL }) => {
     'chainId' : IDL.Nat64,
     'contactAddress' : IDL.Text,
   });
+  const InsertProposolaWithOption = IDL.Record({
+    'title' : IDL.Text,
+    'mechanism' : IDL.Text,
+    'dateCreated' : IDL.Nat64,
+    'description' : IDL.Text,
+    'spaceId' : IDL.Nat64,
+    'commaSeparatedOptions' : IDL.Text,
+  });
   const Space = IDL.Record({
     'id' : IDL.Nat64,
     'websiteLink' : IDL.Text,
@@ -28,14 +36,26 @@ export const idlFactory = ({ IDL }) => {
     'minVotePower' : IDL.Nat64,
     'quorum' : IDL.Nat64,
   });
+  const GetByIdParams = IDL.Record({ 'id' : IDL.Nat64 });
   return IDL.Service({
     'create' : IDL.Func([], [Result], []),
     'drop' : IDL.Func([], [Result], []),
     'get_proposals_voting_power' : IDL.Func([QueryParams], [Result], ['query']),
     'insert_btc_strategy' : IDL.Func([InsertBtcStrategy], [Result], []),
     'insert_evm_strategy' : IDL.Func([InsertEvmStrategy], [Result], []),
+    'insert_proposal_with_option' : IDL.Func(
+        [InsertProposolaWithOption],
+        [Result],
+        [],
+      ),
     'insert_space' : IDL.Func([Space], [Result], []),
     'query_all_spaces' : IDL.Func([QueryParams], [Result], ['query']),
+    'query_proposals_by_space_id' : IDL.Func(
+        [GetByIdParams],
+        [Result],
+        ['query'],
+      ),
+    'query_spaces_by_id' : IDL.Func([GetByIdParams], [Result], ['query']),
   });
 };
 export const init = ({ IDL }) => { return []; };

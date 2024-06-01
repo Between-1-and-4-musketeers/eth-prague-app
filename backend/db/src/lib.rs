@@ -175,7 +175,96 @@ fn query_all_spaces(params: QueryParams) -> Result {
     for space in spaces_iter {
         spaces.push(space.unwrap());
     }
+
     let res = serde_json::to_string(&spaces).unwrap();
+    if res == "null" {
+        return Ok("[]".to_string());
+    }
+    Ok(res)
+}
+
+#[query]
+fn query_spaces_by_id(params: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    let mut stmt = match conn.prepare("select * from Spaces where id = ?1 limit 1") {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+
+    let spaces_iter = match stmt.query_map([params.id], |row| {
+        Ok(Space {
+            id: row.get(0).unwrap(),
+            name: row.get(1).unwrap(),
+            websiteLink: row.get(2).unwrap(),
+            iconLink: row.get(3).unwrap(),
+            voteDelay: row.get(4).unwrap(),
+            voteDuration: row.get(5).unwrap(),
+            quorum: row.get(6).unwrap(),
+            minVoteRole: row.get(7).unwrap(),
+            minVotePower: row.get(8).unwrap(),
+        })
+    }) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let mut spaces = Vec::new();
+    for space in spaces_iter {
+        spaces.push(space.unwrap());
+    }
+    let res = serde_json::to_string(&spaces[0]).unwrap();
+    if res == "null" {
+        return Ok("[]".to_string());
+    }
+    Ok(res)
+}
+
+#[query]
+fn query_proposals_by_space_id(params: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    let mut stmt =
+        match conn.prepare("Select * from Proposals where Proposals.SpaceId = ?1 limit 1") {
+            Ok(e) => e,
+            Err(err) => {
+                return Err(Error::CanisterError {
+                    message: format!("{:?}", err),
+                })
+            }
+        };
+
+    let proposals_iter = match stmt.query_map([params.id], |row| {
+        Ok(Proposal {
+            id: row.get(0).unwrap(),
+            title: row.get(1).unwrap(),
+            description: row.get(2).unwrap(),
+            quorum: row.get(3).unwrap(),
+            dateCreated: row.get(4).unwrap(),
+            mechanism: row.get(5).unwrap(),
+            spaceId: row.get(6).unwrap(),
+        })
+    }) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let mut proposals = Vec::new();
+    for proposal in proposals_iter {
+        proposals.push(proposal.unwrap());
+    }
+    let res = serde_json::to_string(&proposals.first()).unwrap();
+    if res == "null" {
+        return Ok("[]".to_string());
+    }
     Ok(res)
 }
 
@@ -353,6 +442,63 @@ fn insert_evm_strategy(insertEvm: InsertEvmStrategy) -> Result {
     return Ok(format!("{:?}", "OK"));
 }
 
+#[update]
+fn insert_proposal_with_option(insertProposal: InsertProposolaWithOption) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    let res1 = conn.execute("BEGIN TRANSACTION;", []);
+    let res2 = conn.execute(
+        "insert into Proposals (Title, Description, Mechanism, DateCreated, SpaceId)
+        VALUES (?1, ?2, ?3, ?4, ?5);",
+        (
+            insertProposal.title,
+            insertProposal.description,
+            insertProposal.mechanism,
+            insertProposal.spaceId,
+        ),
+    );
+
+    let parts = insertProposal.commaSeparatedOptions.split(",");
+    for part in parts {
+        let res3 = conn.execute(
+            "insert into ProposalOptions (Name, ProposalId)
+            VALUES (?1,(SELECT seq FROM SQLITE_SEQUENCE WHERE name='Proposals'));",
+            [part],
+        );
+        match res3 {
+            Ok(e) => continue,
+            Err(err) => {
+                let _ = conn.execute("ROLLBACK;", []);
+                return Err(Error::CanisterError {
+                    message: format!("{:?}", err),
+                });
+            }
+        }
+    }
+
+    let res4 = conn.execute(
+        "
+        COMMIT;
+        ",
+        (),
+    );
+
+    let pole = [res1, res2, res4];
+
+    for i in pole.iter() {
+        match i {
+            Ok(e) => continue,
+            Err(err) => {
+                let _ = conn.execute("ROLLBACK;", []);
+                return Err(Error::CanisterError {
+                    message: format!("{:?}", err),
+                });
+            }
+        };
+    }
+
+    return Ok(format!("{:?}", "OK"));
+}
+
 // #[update]
 // fn delete(id: usize) -> Result {
 //     let conn = ic_sqlite::CONN.lock().unwrap();
@@ -417,7 +563,7 @@ struct Proposal {
     quorum: usize,
     dateCreated: usize,
     mechanism: String,
-    space: Option<Space>,
+    // space: Option<Space>,
     spaceId: usize,
     // options: Vec<ProposalOption>,
 }
@@ -479,6 +625,11 @@ struct QueryParams {
     offset: usize,
 }
 
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct GetByIdParams {
+    id: usize,
+}
+
 // #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 // struct FilterParams {
 //     name: String,
@@ -505,6 +656,16 @@ struct InsertEvmStrategy {
     chainId: usize,
     contactAddress: String,
     configString: String,
+}
+
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct InsertProposolaWithOption {
+    title: String,
+    description: String,
+    mechanism: String,
+    dateCreated: usize,
+    spaceId: usize,
+    commaSeparatedOptions: String,
 }
 
 //----------------- Selects -----------------

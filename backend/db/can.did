@@ -42,6 +42,10 @@ type QueryParams = record {
     offset: nat64;
 };
 
+type GetByIdParams = record {
+    id: nat64;
+};
+
 
 type InsertBtcStrategy = record {
     name: text;
@@ -58,12 +62,24 @@ type InsertEvmStrategy = record {
 };
 
 
+type InsertProposolaWithOption = record {
+    title: text;
+    description: text;
+    mechanism: text;
+    dateCreated: nat64;
+    spaceId: nat64;
+    commaSeparatedOptions: text;
+};
+
 service : {
     "create": () -> (Result);
     "drop": () -> (Result);
     "query_all_spaces": (QueryParams) -> (Result) query;
+    "query_spaces_by_id": (GetByIdParams) -> (Result) query;
+    "query_proposals_by_space_id": (GetByIdParams) -> (Result) query;
     "get_proposals_voting_power": (QueryParams) -> (Result) query;
     "insert_space": (Space) -> (Result);
     "insert_btc_strategy": (InsertBtcStrategy) -> (Result);
     "insert_evm_strategy": (InsertEvmStrategy) -> (Result);
+    "insert_proposal_with_option": (InsertProposolaWithOption) -> (Result);
 }
