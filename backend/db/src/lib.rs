@@ -717,6 +717,21 @@ fn insert_proposal_block(block: InsertProposalBlock) -> Result{
     };
 }
 
+#[update]
+fn delete_space(id: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    return match conn.execute(
+        "DELETE FROM Spaces WHERE Id = ?1;",
+        (
+          id.id,
+        ),
+    ) {
+        Ok(e) => Ok(format!("{:?}", e)),
+        Err(err) => Err(Error::CanisterError {
+            message: format!("{:?}", err),
+        }),
+    };
+}
 
 
 // #[update]
@@ -745,31 +760,31 @@ fn insert_proposal_block(block: InsertProposalBlock) -> Result{
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct Admin {
-    id: usize,
+    id: u32,
     address: String,
     // spaces: Vec<Space>,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct AdminSpace {
-    id: usize,
-    adminId: usize,
-    spaceId: usize,
+    id: u32,
+    adminId: u32,
+    spaceId: u32,
     // space: Option<Space>,
     // admin: Option<Admin>,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct Space {
-    id: usize,
+    id: u32,
     name: String,
     iconLink: Option<String>,
     websiteLink: Option<String>,
-    voteDelay: usize,
-    voteDuration: usize,
-    quorum: usize,
-    minVoteRole: usize,
-    minVotePower: usize,
+    voteDelay: u32,
+    voteDuration: u32,
+    quorum: u32,
+    minVoteRole: u32,
+    minVotePower: u64,
     // admins :  Vec<Admin>,
     // proposals :  Vec<Proposal>,
     // strategies :  Vec<Strategy>,
@@ -777,42 +792,42 @@ struct Space {
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct Proposal {
-    id: usize,
+    id: u32,
     title: String,
     description: String,
-    dateCreated: usize,
-    mechanism: usize,
+    dateCreated: u32,
+    mechanism: u32,
     // space: Option<Space>,
-    spaceId: usize,
+    spaceId: u32,
     // options: Vec<ProposalOption>,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct ProposalOption {
-    id: usize,
+    id: u32,
     name: String,
-    proposalId: usize,
+    proposalId: u32,
     // votes: Vec<ProposalOptionVote>,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct ProposalOptionVote {
-    id: usize,
+    id: u32,
     userAddress: String,
     voteType: String,
-    timestamp: usize,
+    timestamp: u32,
     signature: String,
-    votingPower: usize,
-    optionId: usize,
+    votingPower: u64,
+    optionId: u32,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct Strategy {
-    id: usize,
+    id: u32,
     name: String,
-    spaceId: usize,
-    btcId: usize,
-    evmId: usize,
+    spaceId: u32,
+    btcId: u32,
+    evmId: u32,
     space: Option<Space>,
     btc: Option<BtcStrategy>,
     evm: Option<EvmStrategy>,
@@ -820,59 +835,59 @@ struct Strategy {
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct BtcStrategy {
-    id: usize,
+    id: u32,
     runeId: String,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct EvmStrategy {
-    id: usize,
-    chainId: usize,
+    id: u32,
+    chainId: u64,
     contractAddress: String,
     configString: String,
 }
 
 // #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 // struct PersonQuery {
-//     id: usize,
+//     id: u32,
 //     name: String,
-//     age: usize,
+//     age: u32,
 // }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct GetBtcStrategy {
-    id: usize,
+    id: u32,
     name: String,
     description: String,
-    spaceId: usize,
+    spaceId: u32,
     runeId: String,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct GetEvmStrategy {
-    id: usize,
+    id: u32,
     name: String,
     description: String,
-    spaceId: usize,
-    chainId: usize,
+    spaceId: u32,
+    chainId: u64,
     contractAddress: String,
     configString: String,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct QueryParams {
-    limit: usize,
-    offset: usize,
+    limit: u32,
+    offset: u32,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct GetByIdParams {
-    id: usize,
+    id: u32,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct GetByAdressAndId {
-    id: usize,
+    id: u32,
     address: String,
 }
 
@@ -883,7 +898,7 @@ struct GetByAdressAndId {
 
 // #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 // struct UpdateParams {
-//     id: usize,
+//     id: u32,
 //     name: String
 // }
 
@@ -892,7 +907,7 @@ struct GetByAdressAndId {
 struct InsertBtcStrategy {
     name: String,
     description: String,
-    spaceId: usize,
+    spaceId: u32,
     runeId: String,
 }
 
@@ -900,8 +915,8 @@ struct InsertBtcStrategy {
 struct InsertEvmStrategy {
     name: String,
     description: String,
-    spaceId: usize,
-    chainId: usize,
+    spaceId: u32,
+    chainId: u64,
     contractAddress: String,
     configString: String,
 }
@@ -910,37 +925,37 @@ struct InsertEvmStrategy {
 struct InsertProposolaWithOption {
     title: String,
     description: String,
-    mechanism: usize,
-    dateCreated: usize,
-    spaceId: usize,
+    mechanism: u32,
+    dateCreated: u32,
+    spaceId: u32,
     commaSeparatedOptions: String,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct InsertProposalOptionVote {
     userAddress: String,
-    voteType: usize,
-    timestamp: usize,
+    voteType: u32,
+    timestamp: u32,
     signature: String,
-    votingPower: usize,
-    optionId: usize,
+    votingPower: u64,
+    optionId: u32,
 }
 
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct InsertProposalBlock {
-    voteType: usize,
-    chainId: Option<usize>,
-    blocknumber: usize,
-    proposalID: usize,
+    voteType: u32,
+    chainId: Option<u64>,
+    blocknumber: u32,
+    proposalID: u32,
 }
 //----------------- Selects -----------------
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct GetProposalVotingPower {
-    id: usize,
+    id: u32,
     name: String,
-    power: usize,
+    power: u32,
 }
 
 #[derive(CandidType, Deserialize)]
