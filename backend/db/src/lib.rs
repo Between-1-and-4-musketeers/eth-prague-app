@@ -761,6 +761,61 @@ fn delete_space(id: GetByIdParams) -> Result {
     };
 }
 
+#[update]
+fn delete_proposal(id: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    return match conn.execute("DELETE FROM Proposals WHERE Id = ?1;", (id.id,)) {
+        Ok(e) => Ok(format!("{:?}", e)),
+        Err(err) => Err(Error::CanisterError {
+            message: format!("{:?}", err),
+        }),
+    };
+}
+
+#[update]
+fn delete_proposal_option(id: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    return match conn.execute("DELETE FROM ProposalOptions WHERE Id = ?1;", (id.id,)) {
+        Ok(e) => Ok(format!("{:?}", e)),
+        Err(err) => Err(Error::CanisterError {
+            message: format!("{:?}", err),
+        }),
+    };
+}
+
+#[update]
+fn delete_proposal_option_vote(id: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    return match conn.execute("DELETE FROM ProposalOptionVotes WHERE Id = ?1;", (id.id,)) {
+        Ok(e) => Ok(format!("{:?}", e)),
+        Err(err) => Err(Error::CanisterError {
+            message: format!("{:?}", err),
+        }),
+    };
+}
+
+#[update]
+fn delete_proposal_block(id: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    return match conn.execute("DELETE FROM ProposalBlocks WHERE Id = ?1;", (id.id,)) {
+        Ok(e) => Ok(format!("{:?}", e)),
+        Err(err) => Err(Error::CanisterError {
+            message: format!("{:?}", err),
+        }),
+    };
+}
+
+#[update]
+fn delete_strategy(id: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    return match conn.execute("DELETE FROM Strategies WHERE Id = ?1;", (id.id,)) {
+        Ok(e) => Ok(format!("{:?}", e)),
+        Err(err) => Err(Error::CanisterError {
+            message: format!("{:?}", err),
+        }),
+    };
+}   
+
 // #[update]
 // fn delete(id: usize) -> Result {
 //     let conn = ic_sqlite::CONN.lock().unwrap();
