@@ -84,6 +84,32 @@ type InsertProposalOptionVote = record {
     optionId: nat64;
 };
 
+type Proposal = record {
+    id: nat64;
+    title: text;
+    description: text;
+    dateCreated: nat64;
+    mechanism: text;
+    spaceId: nat64;
+};
+
+type ProposalOption = record {
+    id: nat64;
+    name: text;
+    proposalId: nat64;
+};
+
+type ProposalOptionVote = record {
+    id: nat64;
+    userAddress: text;
+    voteType: text;
+    timestamp: nat64;
+    signature: text;
+    votingPower: nat64;
+    optionId: nat64;
+};
+
+
 service : {
     "create": () -> (Result);
     "drop": () -> (Result);

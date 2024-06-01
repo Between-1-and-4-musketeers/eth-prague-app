@@ -687,7 +687,7 @@ struct Proposal {
 struct ProposalOption {
     id: usize,
     name: String,
-    proposal: Option<Proposal>,
+    proposalId: usize,
     // votes: Vec<ProposalOptionVote>,
 }
 

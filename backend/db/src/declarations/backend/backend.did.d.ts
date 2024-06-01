@@ -35,6 +35,28 @@ export interface InsertProposolaWithOption {
   'spaceId' : bigint,
   'commaSeparatedOptions' : string,
 }
+export interface Proposal {
+  'id' : bigint,
+  'title' : string,
+  'mechanism' : string,
+  'dateCreated' : bigint,
+  'description' : string,
+  'spaceId' : bigint,
+}
+export interface ProposalOption {
+  'id' : bigint,
+  'name' : string,
+  'proposalId' : bigint,
+}
+export interface ProposalOptionVote {
+  'id' : bigint,
+  'signature' : string,
+  'optionId' : bigint,
+  'voteType' : string,
+  'votingPower' : bigint,
+  'userAddress' : string,
+  'timestamp' : bigint,
+}
 export interface QueryParams { 'offset' : bigint, 'limit' : bigint }
 export type Result = { 'Ok' : string } |
   { 'Err' : Error };
