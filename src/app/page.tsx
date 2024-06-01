@@ -11,7 +11,8 @@ export  default async function HomePage() {
     Ok: string
   };
 
-  const query: QueryResponse = await backend.query_filter({ name: "karel" });
+  // const query: QueryResponse = await backend.query_filter({ name: "karel" });
+  const query: QueryResponse = await backend.query({ offset: 0, limit: 5 });
 
   const parsedQuery = JSON.parse(query.Ok) as  {
       name: string;

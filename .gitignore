@@ -19,3 +19,4 @@ out/
 .next/
 
 backend/db/target/
+.env
