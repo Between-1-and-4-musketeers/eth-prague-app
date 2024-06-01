@@ -4,25 +4,38 @@ export const idlFactory = ({ IDL }) => {
     'InvalidCanister' : IDL.Null,
   });
   const Result = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : Error });
+  const QueryParams = IDL.Record({ 'offset' : IDL.Nat64, 'limit' : IDL.Nat64 });
+  const InsertBtcStrategy = IDL.Record({
+    'runeId' : IDL.Text,
+    'name' : IDL.Text,
+    'spaceId' : IDL.Nat64,
+  });
+  const InsertEvmStrategy = IDL.Record({
+    'name' : IDL.Text,
+    'configString' : IDL.Text,
+    'spaceId' : IDL.Nat64,
+    'chainId' : IDL.Nat64,
+    'contactAddress' : IDL.Text,
+  });
   const Space = IDL.Record({
     'id' : IDL.Nat64,
     'websiteLink' : IDL.Text,
     'name' : IDL.Text,
+    'minVoteRole' : IDL.Nat64,
     'iconLink' : IDL.Text,
     'voteDuration' : IDL.Nat64,
     'voteDelay' : IDL.Nat64,
+    'minVotePower' : IDL.Nat64,
     'quorum' : IDL.Nat64,
   });
-  const QueryParams = IDL.Record({ 'offset' : IDL.Nat64, 'limit' : IDL.Nat64 });
-  const FilterParams = IDL.Record({ 'title' : IDL.Text });
-  const UpdateParams = IDL.Record({ 'id' : IDL.Nat64, 'title' : IDL.Text });
   return IDL.Service({
     'create' : IDL.Func([], [Result], []),
-    'delete' : IDL.Func([IDL.Nat64], [Result], []),
-    'insert' : IDL.Func([Space], [Result], []),
-    'query' : IDL.Func([QueryParams], [Result], ['query']),
-    'query_filter' : IDL.Func([FilterParams], [Result], ['query']),
-    'update' : IDL.Func([UpdateParams], [Result], []),
+    'drop' : IDL.Func([], [Result], []),
+    'get_proposals_voting_power' : IDL.Func([QueryParams], [Result], ['query']),
+    'insert_btc_strategy' : IDL.Func([InsertBtcStrategy], [Result], []),
+    'insert_evm_strategy' : IDL.Func([InsertEvmStrategy], [Result], []),
+    'insert_space' : IDL.Func([Space], [Result], []),
+    'query_all_spaces' : IDL.Func([QueryParams], [Result], ['query']),
   });
 };
 export const init = ({ IDL }) => { return []; };
