@@ -2,20 +2,20 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { type Event, dummyEvents } from "~/dummy/events"
+import { type Event } from "~/dummy/events"
 import { Space } from "~/dummy/spaces"
-import { Button, Collapsible, classNames } from "~/sushi-ui"
+import { useEventsBySpace } from "~/lib/hooks/useEventsBySpace"
+import { Button, Collapsible } from "~/sushi-ui"
 import { Card, CardContent, CardHeader } from "~/sushi-ui/components/card"
 
 function Event({ event }: { event: Event }) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const [isChanging, setIsChanging] = useState(false)
 
   return (
     <div>
       <Card>
         <CardHeader>
-          <h2 className="text-lg">{event.type}</h2>
+          <h2 className="text-lg">{event.eventType}</h2>
         </CardHeader>
         <CardContent>
           <div className="flex justify-between w-full">
@@ -26,19 +26,13 @@ function Event({ event }: { event: Event }) {
             <div className="flex justify-between w-full">
               <div>Payload</div>
               <div
-                onClick={() => {
-                  setIsExpanded(!isExpanded)
-                  setIsChanging(true)
-                }}
+                onClick={() => setIsExpanded(!isExpanded)}
                 className="cursor-pointer text-blue"
               >
                 {isExpanded ? "Hide" : "Show"}
               </div>
             </div>
-            <Collapsible
-              open={isExpanded}
-              afterChange={() => setIsChanging(false)}
-            >
+            <Collapsible open={isExpanded}>
               <p className="text-sm text-slate-200 px-2">{event.payload}</p>
             </Collapsible>
           </div>
@@ -49,7 +43,9 @@ function Event({ event }: { event: Event }) {
 }
 
 export function Events({ space }: { space: Space }) {
-  const events = dummyEvents
+  const { data: events, isInitialLoading } = useEventsBySpace(space.id)
+
+  if (!events || isInitialLoading) return <div>Loading...</div>
 
   return (
     <div className="space-y-8">

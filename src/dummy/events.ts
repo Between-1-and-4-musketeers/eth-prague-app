@@ -6,7 +6,7 @@ export enum EventType {
 
 export type Event = {
   id: number
-  type: EventType
+  eventType: EventType
   webhookUrl: string
   payload: string
 }
@@ -14,19 +14,19 @@ export type Event = {
 export const dummyEvents: Event[] = [
   {
     id: 0,
-    type: EventType.ON_PROPOSAL_CREATED,
+    eventType: EventType.ON_PROPOSAL_CREATED,
     webhookUrl: "http://localhost:3000",
     payload: "proposal created"
   },
   {
     id: 1,
-    type: EventType.ON_PROPOSAL_ENDED,
+    eventType: EventType.ON_PROPOSAL_ENDED,
     webhookUrl: "http://localhost:3000",
     payload: "proposal ended"
   },
   {
     id: 2,
-    type: EventType.ON_VOTE,
+    eventType: EventType.ON_VOTE,
     webhookUrl: "http://localhost:3000",
     payload: `{
       "content": "asjdashuidasoihdasuioijawd",
