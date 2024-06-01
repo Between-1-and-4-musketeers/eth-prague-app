@@ -26,7 +26,7 @@ export const idlFactory = ({ IDL }) => {
     'signature' : IDL.Text,
     'optionId' : IDL.Nat32,
     'voteType' : IDL.Text,
-    'votingPower' : IDL.Nat32,
+    'votingPower' : IDL.Nat64,
     'userAddress' : IDL.Text,
     'timestamp' : IDL.Nat32,
   });

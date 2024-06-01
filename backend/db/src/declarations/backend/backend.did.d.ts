@@ -40,7 +40,7 @@ export interface InsertProposalOptionVote {
   'signature' : string,
   'optionId' : number,
   'voteType' : string,
-  'votingPower' : number,
+  'votingPower' : bigint,
   'userAddress' : string,
   'timestamp' : number,
 }
@@ -70,7 +70,7 @@ export interface ProposalOptionVote {
   'signature' : string,
   'optionId' : number,
   'voteType' : string,
-  'votingPower' : number,
+  'votingPower' : bigint,
   'userAddress' : string,
   'timestamp' : number,
 }
