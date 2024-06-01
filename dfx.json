@@ -1,21 +1,14 @@
 {
   "canisters": {
-    "hello": {
-      "main": "backend/service/Hello.mo",
-      "type": "motoko",
+    "db": {
+      "candid": "backend/db/Can.did",
+      "type": "rust",
+      "package": "db",
       "declarations": {
         "node_compatibility": true
       }
     },
-    "image": {
-      "main": "backend/service/Image.mo",
-      "type": "motoko",
-      "declarations": {
-        "node_compatibility": true
-      }
-    },
-    "hello_assets": {
-      "dependencies": ["hello"],
+    "nextjs": {
       "frontend": {
         "entrypoint": "out/index.html"
       },

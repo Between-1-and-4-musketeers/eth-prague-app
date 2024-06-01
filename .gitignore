@@ -18,3 +18,5 @@ out/
 # Next.js
 .next/
 
+backend/db/target/
+.env

@@ -1,0 +1,11 @@
+{
+  "canisters": {
+    "backend": {
+      "candid": "./can.did",
+      "package": "backend",
+      "type": "rust"
+    }
+  },
+  "dfx": "0.20.1",
+  "version": 1
+}
