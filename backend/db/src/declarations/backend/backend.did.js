@@ -19,8 +19,14 @@ export const idlFactory = ({ IDL }) => {
     'description' : IDL.Text,
     'configString' : IDL.Text,
     'spaceId' : IDL.Nat32,
-    'chainId' : IDL.Nat32,
+    'chainId' : IDL.Nat64,
     'contractAddress' : IDL.Text,
+  });
+  const InsertProposalBlock = IDL.Record({
+    'blocknumber' : IDL.Nat32,
+    'voteType' : IDL.Nat32,
+    'chainId' : IDL.Opt(IDL.Nat64),
+    'proposalID' : IDL.Nat32,
   });
   const InsertProposalOptionVote = IDL.Record({
     'signature' : IDL.Text,
@@ -32,7 +38,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const InsertProposolaWithOption = IDL.Record({
     'title' : IDL.Text,
-    'mechanism' : IDL.Text,
+    'mechanism' : IDL.Nat32,
     'dateCreated' : IDL.Nat32,
     'description' : IDL.Text,
     'spaceId' : IDL.Nat32,
@@ -46,12 +52,13 @@ export const idlFactory = ({ IDL }) => {
     'iconLink' : IDL.Text,
     'voteDuration' : IDL.Nat32,
     'voteDelay' : IDL.Nat32,
-    'minVotePower' : IDL.Nat32,
+    'minVotePower' : IDL.Nat64,
     'quorum' : IDL.Nat32,
   });
   const QueryParams = IDL.Record({ 'offset' : IDL.Nat32, 'limit' : IDL.Nat32 });
   return IDL.Service({
     'create' : IDL.Func([], [Result], []),
+    'delete_space' : IDL.Func([GetByIdParams], [Result], []),
     'drop' : IDL.Func([], [Result], []),
     'get_all_btc_strategies_by_space_id' : IDL.Func(
         [GetByIdParams],
@@ -75,6 +82,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'insert_btc_strategy' : IDL.Func([InsertBtcStrategy], [Result], []),
     'insert_evm_strategy' : IDL.Func([InsertEvmStrategy], [Result], []),
+    'insert_proposal_block' : IDL.Func([InsertProposalBlock], [Result], []),
     'insert_proposal_option_vote' : IDL.Func(
         [InsertProposalOptionVote],
         [Result],
