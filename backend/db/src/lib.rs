@@ -518,6 +518,35 @@ fn get_all_evm_strategies_by_space_id(params: GetByIdParams) -> Result {
 #[update]
 fn insert_space(spaces: Space) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
+    if spaces.id != 0 {
+        return match conn.execute(
+            "UPDATE Spaces set name=?2,
+            websitelink=?3,
+            iconlink=?4,
+            minvoterole=?5,
+            minvotepower=?6,
+            votedelay=?7,
+            voteduration=?8,
+            quorum=?9
+        where Id = ?1;",
+            (
+                spaces.id,
+                spaces.name,
+                spaces.websiteLink,
+                spaces.iconLink,
+                spaces.voteDelay,
+                spaces.voteDuration,
+                spaces.quorum,
+                spaces.minVoteRole,
+                spaces.minVotePower,
+            ),
+        ) {
+            Ok(e) => Ok(format!("{:?}", e)),
+            Err(err) => Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            }),
+        };
+    }
     return match conn.execute(
         "insert into Spaces (
             Name,
@@ -701,13 +730,16 @@ fn insert_proposal_option_vote(vote: InsertProposalOptionVote) -> Result {
 }
 
 #[update]
-fn insert_proposal_block(block: InsertProposalBlock) -> Result{
+fn insert_proposal_block(block: InsertProposalBlock) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
     return match conn.execute(
         "insert into ProposalBlocks(type, chainid, blocknumber, ProposalID)
         values (?1, ?2, ?3, ?4);",
         (
-          block.voteType, block.chainId, block.blocknumber, block.proposalID
+            block.voteType,
+            block.chainId,
+            block.blocknumber,
+            block.proposalID,
         ),
     ) {
         Ok(e) => Ok(format!("{:?}", e)),
@@ -717,22 +749,17 @@ fn insert_proposal_block(block: InsertProposalBlock) -> Result{
     };
 }
 
+//
 #[update]
 fn delete_space(id: GetByIdParams) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
-    return match conn.execute(
-        "DELETE FROM Spaces WHERE Id = ?1;",
-        (
-          id.id,
-        ),
-    ) {
+    return match conn.execute("DELETE FROM Spaces WHERE Id = ?1;", (id.id,)) {
         Ok(e) => Ok(format!("{:?}", e)),
         Err(err) => Err(Error::CanisterError {
             message: format!("{:?}", err),
         }),
     };
 }
-
 
 // #[update]
 // fn delete(id: usize) -> Result {
@@ -940,7 +967,6 @@ struct InsertProposalOptionVote {
     votingPower: u64,
     optionId: u32,
 }
-
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct InsertProposalBlock {
