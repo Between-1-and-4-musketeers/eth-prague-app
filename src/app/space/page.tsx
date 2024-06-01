@@ -8,8 +8,9 @@ import { useSearchParams } from "next/navigation"
 import { useProposalsBySpace } from "~/lib/hooks/useProposalsBySpace"
 import { useSpace } from "~/lib/hooks/useSpace"
 import { useStrategiesBySpace } from "~/lib/hooks/useStrategiesBySpace"
+import { Events } from "./components/Tabs/Events"
 
-const tabs = ["Proposals", "Strategies"] as const
+const tabs = ["Proposals", "Strategies", "Events"] as const
 
 export default function SpacePage() {
   const [currentTab, setTab] = useState<(typeof tabs)[number]>(tabs[0])
@@ -55,6 +56,7 @@ export default function SpacePage() {
         {currentTab === "Strategies" ? (
           <Strategies strategies={strategies} />
         ) : null}
+        {currentTab === "Events" ? <Events space={space} /> : null}
       </div>
     </div>
   )
