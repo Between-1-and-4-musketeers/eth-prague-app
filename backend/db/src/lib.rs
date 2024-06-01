@@ -101,7 +101,17 @@ fn create() -> Result {
         BlockNumber INTEGER NOT NULL,
         ProposalID INTEGER NOT NULL,
         CONSTRAINT FK_ProposalBlocks_Proposals_BtcId FOREIGN KEY (ProposalID) REFERENCES Proposals (Id) ON DELETE CASCADE
-    );
+        );
+
+
+        CREATE TABLE SpaceEvents(
+            Id            INTEGER NOT NULL CONSTRAINT PK_SpaceEvents PRIMARY KEY AUTOINCREMENT,
+            EventType     INTEGER NOT NULL,
+            WebhookURL    TEXT NOT NULL,
+            Payload       TEXT NOT NULL,
+            SpaceID       INTEGER NOT NULL,
+            CONSTRAINT FK_SpaceEvents_Spaces_SpaceID FOREIGN KEY (SpaceID) REFERENCES Spaces (Id) ON DELETE CASCADE
+        );
        
        CREATE INDEX IX_AdminSpaces_SpaceID ON AdminSpaces (SpaceID);
        
@@ -119,6 +129,8 @@ fn create() -> Result {
 
        CREATE INDEX IX_ProposalBlocks_ProposalId ON ProposalBlocks (ProposalID);
        
+       CREATE INDEX IX_SpaceEvents_SpaceId ON SpaceEvents (SpaceID);
+
        END TRANSACTION;"
     )
     {
