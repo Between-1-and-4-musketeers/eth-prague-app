@@ -1,4 +1,4 @@
-import { ProposalOption, dummyProposalOptions } from "./proposalOptions"
+import { ProposalOption, dummyProposalOptions } from "./options"
 import { Type } from "./type"
 
 export type ProposalOptionVote = {

@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
-import { Space, dummySpaces } from "~/dummy/spaces"
+import { Space, spaceSchema } from "~/dummy/spaces"
+import { backendActor } from "~/service/actor-locator"
+import { parseDfinityResult } from "../parse-dfinity-result"
 
 export function useSpace(_spaceId: number | string | null | undefined) {
   const spaceId =
@@ -8,7 +10,13 @@ export function useSpace(_spaceId: number | string | null | undefined) {
   return useQuery<Space>({
     queryKey: ["space", spaceId],
     queryFn: async () => {
-      return dummySpaces.find(space => space.id === Number(spaceId))!
+      const result = await backendActor.query_spaces_by_id({
+        id: spaceId!
+      })
+
+      const data = parseDfinityResult(result)
+
+      return spaceSchema.parse(data)
     },
     enabled: typeof spaceId === "number"
   })

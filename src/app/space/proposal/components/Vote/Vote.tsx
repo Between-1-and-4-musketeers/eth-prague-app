@@ -1,4 +1,4 @@
-import { ProposalOption } from "~/dummy/proposalOptions"
+import { ProposalOption } from "~/dummy/options"
 import { Proposal } from "~/dummy/proposals"
 import { Card, CardContent } from "~/sushi-ui/components/card"
 import { VoteModal } from "./VoteModal"

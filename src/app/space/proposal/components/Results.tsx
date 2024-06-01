@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader } from "~/sushi-ui/components/card"
 import { ProposalOptionVote } from "~/dummy/proposalOptionVotes"
-import { ProposalOption } from "~/dummy/proposalOptions"
+import { ProposalOption } from "~/dummy/options"
 import { useMemo } from "react"
 
 interface ResultsProps {

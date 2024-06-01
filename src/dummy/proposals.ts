@@ -1,3 +1,5 @@
+import { z } from "zod"
+
 export enum ProposalMechanism {
   SINGLE = "Single Choice",
   MULTIPLE = "Multiple Choice"
@@ -10,6 +12,24 @@ export type Proposal = {
   mechanism: ProposalMechanism
   dateCreated: number
 }
+
+export const proposalSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  description: z.string(),
+  spaceId: z.number(),
+  dateCreated: z.number(),
+  mechanism: z.number().transform(x => {
+    switch (x) {
+      case 0:
+        return ProposalMechanism.SINGLE
+      case 1:
+        return ProposalMechanism.MULTIPLE
+      default:
+        return ProposalMechanism.SINGLE
+    }
+  })
+})
 
 export const dummyProposals: Proposal[] = [
   {

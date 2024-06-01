@@ -1,9 +1,10 @@
+import { z } from "zod"
 import { Proposal } from "./proposals"
 import { Strategy } from "./strategies"
 
 export enum MinProposalCreator {
-  "ADMIN",
-  "ANYONE"
+  "ADMIN" = 0,
+  "ANYONE" = 1
 }
 
 export type Space = {
@@ -25,6 +26,29 @@ export type SpaceWithProposals<T extends Space> = T & {
 export type SpaceWithStrategies<T extends Space> = T & {
   strategies: Strategy[]
 }
+
+export const spaceSchema = z
+  .object({
+    id: z.number(),
+    name: z.string(),
+    iconLink: z.string(),
+    websiteLink: z.string(),
+    minVoteRole: z
+      .number()
+      .transform(x =>
+        x ? MinProposalCreator.ANYONE : MinProposalCreator.ADMIN
+      ),
+    minVotePower: z.number(),
+    voteDelay: z.number(),
+    voteDuration: z.number(),
+    quorum: z.number()
+  })
+  .transform(space => ({
+    ...space,
+    minProposalCreator: space.minVoteRole,
+    minProposalCreatorPower: BigInt(Math.floor(space.minVotePower)),
+    quorum: BigInt(space.quorum)
+  }))
 
 export const dummySpaces: Space[] = [
   {

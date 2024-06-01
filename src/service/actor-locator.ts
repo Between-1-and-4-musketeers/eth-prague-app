@@ -15,6 +15,8 @@ export const makeActor = (
 }
 
 export function makeBackendActor() {
-  const canisterId = process.env.CANISTER_ID
-  return makeActor(canisterId ?? '', createBackendActor)
+  const canisterId = process.env.NEXT_PUBLIC_CANISTER_ID
+  return makeActor(canisterId ?? "", createBackendActor)
 }
+
+export const backendActor = makeBackendActor()
