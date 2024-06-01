@@ -132,7 +132,7 @@ type ProposalOptionVote = record {
     voteType: nat32;
     timestamp: nat32;
     signature: text;
-    votingPower: nat32;
+    votingPower: nat64;
     optionId: nat32;
 };
 

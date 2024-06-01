@@ -76,7 +76,7 @@ export interface ProposalOptionVote {
   'signature' : string,
   'optionId' : number,
   'voteType' : number,
-  'votingPower' : number,
+  'votingPower' : bigint,
   'userAddress' : string,
   'timestamp' : number,
 }
