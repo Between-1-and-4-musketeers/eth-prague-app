@@ -14,7 +14,7 @@ export interface _SERVICE {
   'create' : ActorMethod<[], Result>,
   'delete' : ActorMethod<[bigint], Result>,
   'insert' : ActorMethod<[Person], Result>,
-  'query' : ActorMethod<[QueryParams], Result>,
+'query' : ActorMethod<[QueryParams], Result>,
   'query_filter' : ActorMethod<[FilterParams], Result>,
   'update' : ActorMethod<[UpdateParams], Result>,
 }
