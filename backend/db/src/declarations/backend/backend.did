@@ -155,4 +155,9 @@ service : {
     "insert_proposal_option_vote": (InsertProposalOptionVote) -> (Result);
     "insert_proposal_block": (InsertProposalBlock) -> (Result);
     "delete_space": (GetByIdParams) -> (Result);
+    "delete_proposal": (GetByIdParams) -> (Result);
+    "delete_proposal_option": (GetByIdParams) -> (Result);
+    "delete_proposal_option_vote": (GetByIdParams) -> (Result);
+    "delete_strategy": (GetByIdParams) -> (Result);
+    "delete_proposal_block": (GetByIdParams) -> (Result);
 }

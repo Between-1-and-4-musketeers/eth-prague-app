@@ -58,7 +58,12 @@ export const idlFactory = ({ IDL }) => {
   const QueryParams = IDL.Record({ 'offset' : IDL.Nat32, 'limit' : IDL.Nat32 });
   return IDL.Service({
     'create' : IDL.Func([], [Result], []),
+    'delete_proposal' : IDL.Func([GetByIdParams], [Result], []),
+    'delete_proposal_block' : IDL.Func([GetByIdParams], [Result], []),
+    'delete_proposal_option' : IDL.Func([GetByIdParams], [Result], []),
+    'delete_proposal_option_vote' : IDL.Func([GetByIdParams], [Result], []),
     'delete_space' : IDL.Func([GetByIdParams], [Result], []),
+    'delete_strategy' : IDL.Func([GetByIdParams], [Result], []),
     'drop' : IDL.Func([], [Result], []),
     'get_all_btc_strategies_by_space_id' : IDL.Func(
         [GetByIdParams],

@@ -103,7 +103,12 @@ export interface Strategy {
 }
 export interface _SERVICE {
   'create' : ActorMethod<[], Result>,
+  'delete_proposal' : ActorMethod<[GetByIdParams], Result>,
+  'delete_proposal_block' : ActorMethod<[GetByIdParams], Result>,
+  'delete_proposal_option' : ActorMethod<[GetByIdParams], Result>,
+  'delete_proposal_option_vote' : ActorMethod<[GetByIdParams], Result>,
   'delete_space' : ActorMethod<[GetByIdParams], Result>,
+  'delete_strategy' : ActorMethod<[GetByIdParams], Result>,
   'drop' : ActorMethod<[], Result>,
   'get_all_btc_strategies_by_space_id' : ActorMethod<[GetByIdParams], Result>,
   'get_all_evm_strategies_by_space_id' : ActorMethod<[GetByIdParams], Result>,
