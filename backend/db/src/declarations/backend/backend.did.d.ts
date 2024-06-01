@@ -9,6 +9,7 @@ export interface GetBtcStrategy {
   'id' : bigint,
   'runeId' : string,
   'name' : string,
+  'description' : string,
   'spaceId' : bigint,
 }
 export interface GetByAdressAndIdParams { 'id' : bigint, 'address' : string }
@@ -16,10 +17,11 @@ export interface GetByIdParams { 'id' : bigint }
 export interface GetEvmStrategy {
   'id' : bigint,
   'name' : string,
+  'description' : string,
   'configString' : string,
   'spaceId' : bigint,
   'chainId' : bigint,
-  'contactAddress' : string,
+  'contractAddress' : string,
 }
 export interface InsertBtcStrategy {
   'runeId' : string,
@@ -28,10 +30,11 @@ export interface InsertBtcStrategy {
 }
 export interface InsertEvmStrategy {
   'name' : string,
+  'description' : string,
   'configString' : string,
   'spaceId' : bigint,
   'chainId' : bigint,
-  'contactAddress' : string,
+  'contractAddress' : string,
 }
 export interface InsertProposalOptionVote {
   'signature' : string,

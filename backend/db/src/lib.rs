@@ -27,7 +27,7 @@ fn create() -> Result {
        CREATE TABLE EvmStrategies (
            Id INTEGER NOT NULL CONSTRAINT PK_EvmStrategies PRIMARY KEY AUTOINCREMENT,
            ChainId INTEGER NOT NULL,
-           ContactAddress TEXT NOT NULL,
+           ContractAddress TEXT NOT NULL,
            ConfigString TEXT NOT NULL
        );
        
@@ -65,6 +65,7 @@ fn create() -> Result {
            Id INTEGER NOT NULL CONSTRAINT PK_Strategies PRIMARY KEY AUTOINCREMENT,
            Name TEXT NOT NULL,
            SpaceId INTEGER NOT NULL,
+           Description TEXT NULL,
            BtcId INTEGER NULL,
            EvmId INTEGER NULL,
            CONSTRAINT FK_Strategies_BtcStrategies_BtcId FOREIGN KEY (BtcId) REFERENCES BtcStrategies (Id) ON DELETE CASCADE,
@@ -410,7 +411,7 @@ fn get_all_btc_strategies_by_space_id(params: GetByIdParams) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
     let mut stmt = match conn.prepare(
         "
-        SELECT Strategies.Id, name, spaceid,runeid
+        SELECT Strategies.Id, name, Strategies.description, spaceid,runeid
 FROM Strategies
          LEFT JOIN BtcStrategies BS on BS.Id = Strategies.BtcId where Strategies.SpaceId = ?1 and BtcId is not null;
     ",
@@ -426,6 +427,7 @@ FROM Strategies
         Ok(GetBtcStrategy {
             id: row.get(0).unwrap(),
             name: row.get(1).unwrap(),
+            description: row.get(2).unwrap(),
             spaceId: row.get(2).unwrap(),
             runeId: row.get(3).unwrap(),
         })
@@ -450,7 +452,7 @@ fn get_all_evm_strategies_by_space_id(params: GetByIdParams) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
     let mut stmt = match conn.prepare(
         "
-        SELECT Strategies.Id, name, spaceid,ChainId,ContactAddress,ConfigString
+        SELECT Strategies.Id, name , Strategies.description, spaceid,ChainId,ContractAddress,ConfigString
         FROM Strategies
                  LEFT JOIN EvmStrategies EVM on EVM.Id = Strategies.EvmId where Strategies.SpaceId = ?1 and EvmId is not null;
     ",
@@ -466,10 +468,11 @@ fn get_all_evm_strategies_by_space_id(params: GetByIdParams) -> Result {
         Ok(GetEvmStrategy {
             id: row.get(0).unwrap(),
             name: row.get(1).unwrap(),
-            spaceId: row.get(2).unwrap(),
-            chainId: row.get(3).unwrap(),
-            contactAddress: row.get(4).unwrap(),
-            configString: row.get(5).unwrap(),
+            description: row.get(2).unwrap(),
+            spaceId: row.get(3).unwrap(),
+            chainId: row.get(4).unwrap(),
+            contractAddress: row.get(5).unwrap(),
+            configString: row.get(6).unwrap(),
         })
     }) {
         Ok(e) => e,
@@ -553,9 +556,9 @@ fn insert_btc_strategy(insertBtc: InsertBtcStrategy) -> Result {
         [insertBtc.runeId],
     );
     let res3 = conn.execute(
-        "insert into Strategies(Name,SpaceId,BtcId,EvmId)
+        "insert into Strategies(Name,Description, SpaceId,BtcId,EvmId)
         values (?1,?2 ,last_insert_rowid(),null);",
-        (insertBtc.name, insertBtc.spaceId),
+        (insertBtc.name, insertBtc.description, insertBtc.spaceId),
     );
     let res4 = conn.execute(
         "
@@ -586,17 +589,17 @@ fn insert_evm_strategy(insertEvm: InsertEvmStrategy) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
     let res1 = conn.execute("BEGIN TRANSACTION;", []);
     let res2 = conn.execute(
-        "insert into EvmStrategies(ChainId,ContactAddress,ConfigString) values (?1,?2,?3);",
+        "insert into EvmStrategies(ChainId,ContractAddress,ConfigString) values (?1,?2,?3);",
         (
             insertEvm.chainId,
-            insertEvm.contactAddress,
+            insertEvm.contractAddress,
             insertEvm.configString,
         ),
     );
     let res3 = conn.execute(
-        " insert into Strategies(Name,SpaceId,EvmId)
-        values (?1,?2,last_insert_rowid());",
-        (insertEvm.name, insertEvm.spaceId),
+        " insert into Strategies(Name,Description, SpaceId,EvmId)
+        values (?1,?2,?3, last_insert_rowid());",
+        (insertEvm.name, insertEvm.description, insertEvm.spaceId),
     );
     let res4 = conn.execute(
         "
@@ -806,7 +809,7 @@ struct BtcStrategy {
 struct EvmStrategy {
     id: usize,
     chainId: usize,
-    contactAddress: String,
+    contractAddress: String,
     configString: String,
 }
 
@@ -821,6 +824,7 @@ struct EvmStrategy {
 struct GetBtcStrategy {
     id: usize,
     name: String,
+    description: String,
     spaceId: usize,
     runeId: String,
 }
@@ -829,9 +833,10 @@ struct GetBtcStrategy {
 struct GetEvmStrategy {
     id: usize,
     name: String,
+    description: String,
     spaceId: usize,
     chainId: usize,
-    contactAddress: String,
+    contractAddress: String,
     configString: String,
 }
 
@@ -867,6 +872,7 @@ struct GetByAdressAndId {
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct InsertBtcStrategy {
     name: String,
+    description: String,
     spaceId: usize,
     runeId: String,
 }
@@ -874,9 +880,10 @@ struct InsertBtcStrategy {
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct InsertEvmStrategy {
     name: String,
+    description: String,
     spaceId: usize,
     chainId: usize,
-    contactAddress: String,
+    contractAddress: String,
     configString: String,
 }
 

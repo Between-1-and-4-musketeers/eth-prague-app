@@ -16,10 +16,11 @@ export const idlFactory = ({ IDL }) => {
   });
   const InsertEvmStrategy = IDL.Record({
     'name' : IDL.Text,
+    'description' : IDL.Text,
     'configString' : IDL.Text,
     'spaceId' : IDL.Nat64,
     'chainId' : IDL.Nat64,
-    'contactAddress' : IDL.Text,
+    'contractAddress' : IDL.Text,
   });
   const InsertProposalOptionVote = IDL.Record({
     'signature' : IDL.Text,

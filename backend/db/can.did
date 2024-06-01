@@ -60,15 +60,17 @@ type InsertBtcStrategy = record {
 type GetBtcStrategy = record {
     id: nat64;
     name: text;
+    description: text;
     spaceId: nat64;
     runeId: text;
 };
 
 type InsertEvmStrategy = record {
     name: text;
+    description: text;
     spaceId: nat64;
     chainId: nat64;
-    contactAddress: text;
+    contractAddress: text;
     configString: text;
 };
 
@@ -76,9 +78,10 @@ type InsertEvmStrategy = record {
 type GetEvmStrategy = record {
     id: nat64;
     name: text;
+    description: text;
     spaceId: nat64;
     chainId: nat64;
-    contactAddress: text;
+    contractAddress: text;
     configString: text;
 };
 
