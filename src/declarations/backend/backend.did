@@ -10,9 +10,14 @@ type Result = variant {
     Err : Error;
 };
 
-type Person = record {
+type Space = record {
+    id: nat64;
     name: text;
-    age: nat64
+    iconLink : text;
+    websiteLink : text;
+    voteDelay: nat64;
+    voteDuration: nat64;
+    quorum: nat64;
 };
 
 type QueryParams = record {
@@ -21,19 +26,19 @@ type QueryParams = record {
 };
 
 type FilterParams = record {
-    name: text
+    title: text
 };
 
 type UpdateParams = record {
     id: nat64;
-    name: text;
+    title: text;
 };
 
 service : {
     "create": () -> (Result);
     "query": (QueryParams) -> (Result) query;
     "query_filter": (FilterParams) -> (Result) query;
-    "insert": (Person) -> (Result);
+    "insert": (Space) -> (Result);
     "delete": (nat64) -> (Result);
     "update": (UpdateParams) -> (Result);
 }

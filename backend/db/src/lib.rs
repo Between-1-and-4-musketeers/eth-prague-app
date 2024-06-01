@@ -3,123 +3,475 @@ extern crate ic_cdk_macros;
 #[macro_use]
 extern crate serde;
 
-use ic_cdk::api::call::RejectionCode;
 use candid::CandidType;
+use ic_cdk::api::call::RejectionCode;
 
 #[update]
 fn create() -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
-    return match conn.execute(
-        "create table person (
-            id   INTEGER PRIMARY KEY,
-            name TEXT NOT NULL,
-            age INTEGER
-        )",
-        []
+    // return match conn.execute("DROP TABLE Spaces", [])
+    return match conn.execute_batch(
+       "
+       pragma foreign_keys = ON;
+        BEGIN TRANSACTION;
+
+       CREATE TABLE Admins (
+           Address TEXT NOT NULL CONSTRAINT PK_Admins PRIMARY KEY
+       );
+       
+       CREATE TABLE BtcStrategies (
+           Id INTEGER NOT NULL CONSTRAINT PK_BtcStrategies PRIMARY KEY AUTOINCREMENT,
+           RuneId TEXT NOT NULL
+       );
+       
+       CREATE TABLE EvmStrategies (
+           Id INTEGER NOT NULL CONSTRAINT PK_EvmStrategies PRIMARY KEY AUTOINCREMENT,
+           ChainId INTEGER NOT NULL,
+           ContactAddress TEXT NOT NULL,
+           ConfigString TEXT NOT NULL
+       );
+       
+       CREATE TABLE Spaces (
+           Id INTEGER NOT NULL CONSTRAINT PK_Spaces PRIMARY KEY AUTOINCREMENT,
+           Name TEXT NOT NULL,
+           WebsiteLink TEXT NULL,
+           IconLink TEXT NULL,
+           VoteDelay INTEGER NOT NULL,
+           VoteDuration INTEGER NOT NULL,
+           Quorum INTEGER NOT NULL
+           MinVoteRole INTEGER NOT NULL,
+           MinVotePower INTEGER NOT NULL,
+       );
+       
+       CREATE TABLE AdminSpaces (
+           AdminID TEXT NOT NULL,
+           SpaceID INTEGER NOT NULL,
+           CONSTRAINT PK_AdminSpaces PRIMARY KEY (AdminID, SpaceID),
+           CONSTRAINT FK_AdminSpaces_Admins_AdminID FOREIGN KEY (AdminID) REFERENCES Admins (Address) ON DELETE CASCADE,
+           CONSTRAINT FK_AdminSpaces_Spaces_SpaceID FOREIGN KEY (SpaceID) REFERENCES Spaces (Id) ON DELETE CASCADE
+       );
+       
+       CREATE TABLE Proposals (
+           Id INTEGER NOT NULL CONSTRAINT PK_Proposals PRIMARY KEY AUTOINCREMENT,
+           Title TEXT NOT NULL,
+           Description TEXT NOT NULL,
+           Mechanism INTEGER NOT NULL,
+           DateCreated INTEGER NOT NULL,
+           SpaceId INTEGER NOT NULL,
+           CONSTRAINT FK_Proposals_Spaces_SpaceId FOREIGN KEY (SpaceId) REFERENCES Spaces (Id) ON DELETE CASCADE
+       );
+       
+       CREATE TABLE Strategies (
+           Id INTEGER NOT NULL CONSTRAINT PK_Strategies PRIMARY KEY AUTOINCREMENT,
+           Name TEXT NOT NULL,
+           SpaceId INTEGER NOT NULL,
+           BtcId INTEGER NULL,
+           EvmId INTEGER NULL,
+           CONSTRAINT FK_Strategies_BtcStrategies_BtcId FOREIGN KEY (BtcId) REFERENCES BtcStrategies (Id) ON DELETE CASCADE,
+           CONSTRAINT FK_Strategies_EvmStrategies_EvmId FOREIGN KEY (EvmId) REFERENCES EvmStrategies (Id) ON DELETE CASCADE,
+           CONSTRAINT FK_Strategies_Spaces_SpaceId FOREIGN KEY (SpaceId) REFERENCES Spaces (Id) ON DELETE CASCADE
+       );
+       
+       CREATE TABLE ProposalOptions (
+           Id INTEGER NOT NULL CONSTRAINT PK_ProposalOptions PRIMARY KEY AUTOINCREMENT,
+           Name TEXT NOT NULL,
+           ProposalId INTEGER NOT NULL,
+           CONSTRAINT FK_ProposalOptions_Proposals_ProposalId FOREIGN KEY (ProposalId) REFERENCES Proposals (Id) ON DELETE CASCADE
+       );
+       
+       CREATE TABLE ProposalOptionVotes (
+           Id INTEGER NOT NULL CONSTRAINT PK_ProposalOptionVotes PRIMARY KEY AUTOINCREMENT,
+           UserAddress TEXT NOT NULL,
+           type INTEGER NOT NULL,
+           timestamp INTEGER NOT NULL,
+           signature TEXT NOT NULL,
+           VotingPower INTEGER NOT NULL,
+           OptionId INTEGER NOT NULL,
+           CONSTRAINT FK_ProposalOptionVotes_ProposalOptions_OptionId FOREIGN KEY (OptionId) REFERENCES ProposalOptions (Id) ON DELETE CASCADE
+       );
+       
+       CREATE INDEX IX_AdminSpaces_SpaceID ON AdminSpaces (SpaceID);
+       
+       CREATE INDEX IX_ProposalOptions_ProposalId ON ProposalOptions (ProposalId);
+       
+       CREATE INDEX IX_ProposalOptionVotes_OptionId ON ProposalOptionVotes (OptionId);
+       
+       CREATE INDEX IX_Proposals_SpaceId ON Proposals (SpaceId);
+       
+       CREATE UNIQUE INDEX IX_Strategies_BtcId ON Strategies (BtcId);
+       
+       CREATE UNIQUE INDEX IX_Strategies_EvmId ON Strategies (EvmId);
+       
+       CREATE INDEX IX_Strategies_SpaceId ON Strategies (SpaceId);
+       
+       END TRANSACTION;"
+    )
+    {
+        Ok(e) => Ok(format!("{:?}", e)),
+        Err(err) => {
+            let _ = conn.execute("ROLLBACK;", []);
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            });
+        }
+    };
+}
+
+#[update]
+fn drop() -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    return match conn.execute_batch(
+        "
+        PRAGMA writable_schema = 1;
+
+        delete from sqlite_master where type in ('table', 'index', 'trigger');
+    
+        PRAGMA writable_schema = 0;
+        VACUUM;
+    ",
     ) {
         Ok(e) => Ok(format!("{:?}", e)),
-        Err(err) => Err(Error::CanisterError {message: format!("{:?}", err) })
-    }
+        Err(err) => {
+            let _ = conn.execute("ROLLBACK;", []);
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            });
+        }
+    };
 }
 
 #[query]
-fn query(params: QueryParams) -> Result {
+fn query_all_spaces(params: QueryParams) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
-    let mut stmt = match conn.prepare("select * from person limit ?1 offset ?2") {
+    let mut stmt = match conn.prepare("select * from Spaces limit ?1 offset ?2") {
         Ok(e) => e,
-        Err(err) => return Err(Error::CanisterError {message: format!("{:?}", err) })
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
     };
-    let person_iter = match stmt.query_map((params.limit, params.offset), |row| {
-        Ok(PersonQuery {
+    let spaces_iter = match stmt.query_map((params.limit, params.offset), |row| {
+        Ok(Space {
             id: row.get(0).unwrap(),
             name: row.get(1).unwrap(),
-            age: row.get(2).unwrap(),
+            websiteLink: row.get(2).unwrap(),
+            iconLink: row.get(3).unwrap(),
+            voteDelay: row.get(4).unwrap(),
+            voteDuration: row.get(5).unwrap(),
+            quorum: row.get(6).unwrap(),
+            minVoteRole: row.get(7).unwrap(),
+            minVotePower: row.get(8).unwrap(),
         })
     }) {
         Ok(e) => e,
-        Err(err) => return Err(Error::CanisterError {message: format!("{:?}", err) })
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
     };
-    let mut persons = Vec::new();
-    for person in person_iter {
-        persons.push(person.unwrap());
+    let mut spaces = Vec::new();
+    for space in spaces_iter {
+        spaces.push(space.unwrap());
     }
-    let res = serde_json::to_string(&persons).unwrap();
+    let res = serde_json::to_string(&spaces).unwrap();
     Ok(res)
 }
 
 #[query]
-fn query_filter(params: FilterParams) -> Result {
+fn get_proposals_voting_power(proposalId: usize) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
-    let mut stmt = match conn.prepare("select * from person where name=?1") {
+    let mut stmt = match conn.prepare(
+        "
+        select o.Id, sum(v.VotingPower)
+        from ProposalOptions o left join ProposalOptionVotes v on o.Id = v.OptionId
+        where (o.ProposalId = ?1)
+        group by o.Id;
+    ",
+    ) {
         Ok(e) => e,
-        Err(err) => return Err(Error::CanisterError {message: format!("{:?}", err) })
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
     };
-    let person_iter = match stmt.query_map((params.name, ), |row| {
-        Ok(PersonQuery {
+    let proposals_iter = match stmt.query_map([proposalId], |row| {
+        Ok(GetProposalVotingPower {
             id: row.get(0).unwrap(),
-            name: row.get(1).unwrap(),
-            age: row.get(2).unwrap(),
+            power: row.get(1).unwrap(),
         })
     }) {
         Ok(e) => e,
-        Err(err) => return Err(Error::CanisterError {message: format!("{:?}", err) })
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
     };
-    let mut persons = Vec::new();
-    for person in person_iter {
-        persons.push(person.unwrap());
+    let mut proposals = Vec::new();
+    for proposal in proposals_iter {
+        proposals.push(proposal.unwrap());
     }
-    let res = serde_json::to_string(&persons).unwrap();
+    let res = serde_json::to_string(&proposals).unwrap();
     Ok(res)
 }
 
+// #[query]
+// fn query_filter(params: FilterParams) -> Result {
+//     let conn = ic_sqlite::CONN.lock().unwrap();
+//     let mut stmt = match conn.prepare("select * from person where name=?1") {
+//         Ok(e) => e,
+//         Err(err) => return Err(Error::CanisterError {message: format!("{:?}", err) })
+//     };
+//     let person_iter = match stmt.query_map((params.name, ), |row| {
+//         Ok(PersonQuery {
+//             id: row.get(0).unwrap(),
+//             name: row.get(1).unwrap(),
+//             age: row.get(2).unwrap(),
+//         })
+//     }) {
+//         Ok(e) => e,
+//         Err(err) => return Err(Error::CanisterError {message: format!("{:?}", err) })
+//     };
+//     let mut persons = Vec::new();
+//     for person in person_iter {
+//         persons.push(person.unwrap());
+//     }
+//     let res = serde_json::to_string(&persons).unwrap();
+//     Ok(res)
+// }
+
 #[update]
-fn insert(person: Person) -> Result {
+fn insert_space(spaces: Space) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
     return match conn.execute(
-        "insert into person (name, age) values (?1, ?2);",
-        (person.name, person.age,)
+        "insert into Spaces (
+            Name,
+            WebsiteLink,
+            IconLink,
+            VoteDelay,
+            VoteDuration,
+            Quorum,
+            MinVoteRole,
+            MinVotePower
+        ) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8);",
+        (
+            spaces.name,
+            spaces.websiteLink,
+            spaces.iconLink,
+            spaces.voteDelay,
+            spaces.voteDuration,
+            spaces.quorum,
+            spaces.minVoteRole,
+            spaces.minVotePower,
+        ),
     ) {
         Ok(e) => Ok(format!("{:?}", e)),
-        Err(err) => Err(Error::CanisterError {message: format!("{:?}", err) })
-    }
+        Err(err) => Err(Error::CanisterError {
+            message: format!("{:?}", err),
+        }),
+    };
 }
 
 #[update]
-fn delete(id: usize) -> Result {
+fn insert_btc_strategy(insertBtc: InsertBtcStrategy) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
-    return match conn.execute(
-        "delete from person where id=?1",
-        (id,)
-    ) {
-        Ok(e) => Ok(format!("{:?}", e)),
-        Err(err) => Err(Error::CanisterError {message: format!("{:?}", err) })
+    let res1 = conn.execute("BEGIN TRANSACTION;", []);
+    let res2 = conn.execute(
+        "insert into BtcStrategies(RuneId) values (?1);",
+        [insertBtc.runeId],
+    );
+    let res3 = conn.execute(
+        "insert into Strategies(Name,SpaceId,BtcId,EvmId)
+        values (?1,?2 ,last_insert_rowid(),null);",
+        (insertBtc.name, insertBtc.spaceId),
+    );
+    let res4 = conn.execute(
+        "
+        END TRANSACTION;
+        ",
+        (),
+    );
+
+    let pole = [res1, res2, res3, res4];
+
+    for i in pole.iter() {
+        match i {
+            Ok(e) => continue,
+            Err(err) => {
+                let _ = conn.execute("ROLLBACK;", []);
+                return Err(Error::CanisterError {
+                    message: format!("{:?}", err),
+                });
+            }
+        };
     }
+
+    return Ok(format!("{:?}", "OK"));
 }
 
 #[update]
-fn update(params: UpdateParams) -> Result {
+fn insert_evm_strategy(insertEvm: InsertEvmStrategy) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
-    return match conn.execute(
-        "update person set name=?1 where id=?2",
-        (params.name, params.id)
-    ) {
-        Ok(e) => Ok(format!("{:?}", e)),
-        Err(err) => Err(Error::CanisterError {message: format!("{:?}", err) })
+    let res1 = conn.execute("BEGIN TRANSACTION;", []);
+    let res2 = conn.execute(
+        "insert into EvmStrategies(ChainId,ContactAddress,ConfigString) values (?1,?2,?3);",
+        (
+            insertEvm.chainId,
+            insertEvm.contactAddress,
+            insertEvm.configString,
+        ),
+    );
+    let res3 = conn.execute(
+        " insert into Strategies(Name,SpaceId,EvmId)
+        values (?1,?2,last_insert_rowid());",
+        (insertEvm.name, insertEvm.spaceId),
+    );
+    let res4 = conn.execute(
+        "
+        END TRANSACTION;
+        ",
+        (),
+    );
+
+    let pole = [res1, res2, res3, res4];
+
+    for i in pole.iter() {
+        match i {
+            Ok(e) => continue,
+            Err(err) => {
+                let _ = conn.execute("ROLLBACK;", []);
+                return Err(Error::CanisterError {
+                    message: format!("{:?}", err),
+                });
+            }
+        };
     }
+
+    return Ok(format!("{:?}", "OK"));
+}
+
+// #[update]
+// fn delete(id: usize) -> Result {
+//     let conn = ic_sqlite::CONN.lock().unwrap();
+//     return match conn.execute(
+//         "delete from person where id=?1",
+//         (id,)
+//     ) {
+//         Ok(e) => Ok(format!("{:?}", e)),
+//         Err(err) => Err(Error::CanisterError {message: format!("{:?}", err) })
+//     }
+// }
+
+// #[update]
+// fn update(params: UpdateParams) -> Result {
+//     let conn = ic_sqlite::CONN.lock().unwrap();
+//     return match conn.execute(
+//         "update person set name=?1 where id=?2",
+//         (params.name, params.id)
+//     ) {
+//         Ok(e) => Ok(format!("{:?}", e)),
+//         Err(err) => Err(Error::CanisterError {message: format!("{:?}", err) })
+//     }
+// }
+
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct Admin {
+    id: usize,
+    address: String,
+    // spaces: Vec<Space>,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
-struct Person {
-    name: String,
-    age: usize,
+struct AdminSpace {
+    id: usize,
+    adminId: usize,
+    spaceId: usize,
+    // space: Option<Space>,
+    // admin: Option<Admin>,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
-struct PersonQuery {
+struct Space {
     id: usize,
     name: String,
-    age: usize,
+    iconLink: Option<String>,
+    websiteLink: Option<String>,
+    voteDelay: usize,
+    voteDuration: usize,
+    quorum: usize,
+    minVoteRole: usize,
+    minVotePower: usize,
+    // admins :  Vec<Admin>,
+    // proposals :  Vec<Proposal>,
+    // strategies :  Vec<Strategy>,
 }
+
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct Proposal {
+    id: usize,
+    title: String,
+    description: String,
+    quorum: usize,
+    dateCreated: usize,
+    mechanism: String,
+    space: Option<Space>,
+    spaceId: usize,
+    // options: Vec<ProposalOption>,
+}
+
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct ProposalOption {
+    id: usize,
+    name: String,
+    proposal: Option<Proposal>,
+    // votes: Vec<ProposalOptionVote>,
+}
+
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct ProposalOptionVote {
+    id: usize,
+    userAdress: String,
+    voteType: String,
+    timestamp: usize,
+    signature: String,
+    option: Option<ProposalOption>,
+}
+
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct Strategy {
+    id: usize,
+    name: String,
+    spaceId: usize,
+    btcId: usize,
+    evmId: usize,
+    space: Option<Space>,
+    btc: Option<BtcStrategy>,
+    evm: Option<EvmStrategy>,
+}
+
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct BtcStrategy {
+    id: usize,
+    runeId: String,
+}
+
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct EvmStrategy {
+    id: usize,
+    chainId: usize,
+    contactAddress: String,
+    configString: String,
+}
+
+// #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+// struct PersonQuery {
+//     id: usize,
+//     name: String,
+//     age: usize,
+// }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct QueryParams {
@@ -127,17 +479,41 @@ struct QueryParams {
     offset: usize,
 }
 
+// #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+// struct FilterParams {
+//     name: String,
+// }
+
+// #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+// struct UpdateParams {
+//     id: usize,
+//     name: String
+// }
+
+// ----------------- Inserts -----------------
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
-struct FilterParams {
+struct InsertBtcStrategy {
     name: String,
+    spaceId: usize,
+    runeId: String,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
-struct UpdateParams {
-    id: usize,
-    name: String
+struct InsertEvmStrategy {
+    name: String,
+    spaceId: usize,
+    chainId: usize,
+    contactAddress: String,
+    configString: String,
 }
 
+//----------------- Selects -----------------
+
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct GetProposalVotingPower {
+    id: usize,
+    power: usize,
+}
 
 #[derive(CandidType, Deserialize)]
 enum Error {

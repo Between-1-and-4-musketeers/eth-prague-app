@@ -10,9 +10,31 @@ type Result = variant {
     Err : Error;
 };
 
-type Person = record {
+type Space = record {
+    id: nat64;
     name: text;
-    age: nat64
+    iconLink : text;
+    websiteLink : text;
+    voteDelay: nat64;
+    voteDuration: nat64;
+    minVoteRole: nat64;
+    minVotePower: nat64;
+    quorum: nat64;
+};
+
+
+type Strategy = record {
+    id: nat64;
+    name: text;
+    spaceId: nat64;
+    btcId: nat64;
+    evmId: nat64;
+};
+
+
+type BtcStrategy = record {
+    id: nat64;
+    runeId: text;
 };
 
 type QueryParams = record {
@@ -20,20 +42,28 @@ type QueryParams = record {
     offset: nat64;
 };
 
-type FilterParams = record {
-    name: text
+
+type InsertBtcStrategy = record {
+    name: text;
+    spaceId: nat64;
+    runeId: text;
 };
 
-type UpdateParams = record {
-    id: nat64;
+type InsertEvmStrategy = record {
     name: text;
+    spaceId: nat64;
+    chainId: nat64;
+    contactAddress: text;
+    configString: text;
 };
+
 
 service : {
     "create": () -> (Result);
-    "query": (QueryParams) -> (Result) query;
-    "query_filter": (FilterParams) -> (Result) query;
-    "insert": (Person) -> (Result);
-    "delete": (nat64) -> (Result);
-    "update": (UpdateParams) -> (Result);
+    "drop": () -> (Result);
+    "query_all_spaces": (QueryParams) -> (Result) query;
+    "get_proposals_voting_power": (QueryParams) -> (Result) query;
+    "insert_space": (Space) -> (Result);
+    "insert_btc_strategy": (InsertBtcStrategy) -> (Result);
+    "insert_evm_strategy": (InsertEvmStrategy) -> (Result);
 }

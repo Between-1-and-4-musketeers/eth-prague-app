@@ -4,17 +4,25 @@ import type { IDL } from '@dfinity/candid';
 
 export type Error = { 'CanisterError' : { 'message' : string } } |
   { 'InvalidCanister' : null };
-export interface FilterParams { 'name' : string }
-export interface Person { 'age' : bigint, 'name' : string }
+export interface FilterParams { 'title' : string }
 export interface QueryParams { 'offset' : bigint, 'limit' : bigint }
 export type Result = { 'Ok' : string } |
   { 'Err' : Error };
-export interface UpdateParams { 'id' : bigint, 'name' : string }
+export interface Space {
+  'id' : bigint,
+  'websiteLink' : string,
+  'name' : string,
+  'iconLink' : string,
+  'voteDuration' : bigint,
+  'voteDelay' : bigint,
+  'quorum' : bigint,
+}
+export interface UpdateParams { 'id' : bigint, 'title' : string }
 export interface _SERVICE {
   'create' : ActorMethod<[], Result>,
   'delete' : ActorMethod<[bigint], Result>,
-  'insert' : ActorMethod<[Person], Result>,
-'query' : ActorMethod<[QueryParams], Result>,
+  'insert' : ActorMethod<[Space], Result>,
+  'query' : ActorMethod<[QueryParams], Result>,
   'query_filter' : ActorMethod<[FilterParams], Result>,
   'update' : ActorMethod<[UpdateParams], Result>,
 }

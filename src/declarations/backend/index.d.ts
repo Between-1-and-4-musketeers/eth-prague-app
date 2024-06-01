@@ -48,5 +48,3 @@ export declare const createActor: (
  * @constructs {@link ActorSubClass}
  */
 export declare const backend: ActorSubclass<_SERVICE>;
-
-
