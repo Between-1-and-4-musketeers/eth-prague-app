@@ -2,98 +2,98 @@ import type { Principal } from '@dfinity/principal';
 import type { ActorMethod } from '@dfinity/agent';
 import type { IDL } from '@dfinity/candid';
 
-export interface BtcStrategy { 'id' : bigint, 'runeId' : string }
+export interface BtcStrategy { 'id' : number, 'runeId' : string }
 export type Error = { 'CanisterError' : { 'message' : string } } |
   { 'InvalidCanister' : null };
 export interface GetBtcStrategy {
-  'id' : bigint,
+  'id' : number,
   'runeId' : string,
   'name' : string,
   'description' : string,
-  'spaceId' : bigint,
+  'spaceId' : number,
 }
-export interface GetByAdressAndIdParams { 'id' : bigint, 'address' : string }
-export interface GetByIdParams { 'id' : bigint }
+export interface GetByAdressAndIdParams { 'id' : number, 'address' : string }
+export interface GetByIdParams { 'id' : number }
 export interface GetEvmStrategy {
-  'id' : bigint,
+  'id' : number,
   'name' : string,
   'description' : string,
   'configString' : string,
-  'spaceId' : bigint,
-  'chainId' : bigint,
+  'spaceId' : number,
+  'chainId' : number,
   'contractAddress' : string,
 }
 export interface InsertBtcStrategy {
   'runeId' : string,
   'name' : string,
-  'spaceId' : bigint,
+  'spaceId' : number,
 }
 export interface InsertEvmStrategy {
   'name' : string,
   'description' : string,
   'configString' : string,
-  'spaceId' : bigint,
-  'chainId' : bigint,
+  'spaceId' : number,
+  'chainId' : number,
   'contractAddress' : string,
 }
 export interface InsertProposalOptionVote {
   'signature' : string,
-  'optionId' : bigint,
+  'optionId' : number,
   'voteType' : string,
-  'votingPower' : bigint,
+  'votingPower' : number,
   'userAddress' : string,
-  'timestamp' : bigint,
+  'timestamp' : number,
 }
 export interface InsertProposolaWithOption {
   'title' : string,
   'mechanism' : string,
-  'dateCreated' : bigint,
+  'dateCreated' : number,
   'description' : string,
-  'spaceId' : bigint,
+  'spaceId' : number,
   'commaSeparatedOptions' : string,
 }
 export interface Proposal {
-  'id' : bigint,
+  'id' : number,
   'title' : string,
   'mechanism' : string,
-  'dateCreated' : bigint,
+  'dateCreated' : number,
   'description' : string,
-  'spaceId' : bigint,
+  'spaceId' : number,
 }
 export interface ProposalOption {
-  'id' : bigint,
+  'id' : number,
   'name' : string,
-  'proposalId' : bigint,
+  'proposalId' : number,
 }
 export interface ProposalOptionVote {
-  'id' : bigint,
+  'id' : number,
   'signature' : string,
-  'optionId' : bigint,
+  'optionId' : number,
   'voteType' : string,
-  'votingPower' : bigint,
+  'votingPower' : number,
   'userAddress' : string,
-  'timestamp' : bigint,
+  'timestamp' : number,
 }
-export interface QueryParams { 'offset' : bigint, 'limit' : bigint }
+export interface QueryParams { 'offset' : number, 'limit' : number }
 export type Result = { 'Ok' : string } |
   { 'Err' : Error };
 export interface Space {
-  'id' : bigint,
+  'id' : number,
   'websiteLink' : string,
   'name' : string,
-  'minVoteRole' : bigint,
+  'minVoteRole' : number,
   'iconLink' : string,
-  'voteDuration' : bigint,
-  'voteDelay' : bigint,
-  'minVotePower' : bigint,
-  'quorum' : bigint,
+  'voteDuration' : number,
+  'voteDelay' : number,
+  'minVotePower' : number,
+  'quorum' : number,
 }
 export interface Strategy {
-  'id' : bigint,
+  'id' : number,
   'name' : string,
-  'evmId' : bigint,
-  'spaceId' : bigint,
-  'btcId' : bigint,
+  'evmId' : number,
+  'spaceId' : number,
+  'btcId' : number,
 }
 export interface _SERVICE {
   'create' : ActorMethod<[], Result>,

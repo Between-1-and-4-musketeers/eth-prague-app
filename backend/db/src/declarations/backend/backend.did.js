@@ -4,52 +4,52 @@ export const idlFactory = ({ IDL }) => {
     'InvalidCanister' : IDL.Null,
   });
   const Result = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : Error });
-  const GetByIdParams = IDL.Record({ 'id' : IDL.Nat64 });
+  const GetByIdParams = IDL.Record({ 'id' : IDL.Nat32 });
   const GetByAdressAndIdParams = IDL.Record({
-    'id' : IDL.Nat64,
+    'id' : IDL.Nat32,
     'address' : IDL.Text,
   });
   const InsertBtcStrategy = IDL.Record({
     'runeId' : IDL.Text,
     'name' : IDL.Text,
-    'spaceId' : IDL.Nat64,
+    'spaceId' : IDL.Nat32,
   });
   const InsertEvmStrategy = IDL.Record({
     'name' : IDL.Text,
     'description' : IDL.Text,
     'configString' : IDL.Text,
-    'spaceId' : IDL.Nat64,
-    'chainId' : IDL.Nat64,
+    'spaceId' : IDL.Nat32,
+    'chainId' : IDL.Nat32,
     'contractAddress' : IDL.Text,
   });
   const InsertProposalOptionVote = IDL.Record({
     'signature' : IDL.Text,
-    'optionId' : IDL.Nat64,
+    'optionId' : IDL.Nat32,
     'voteType' : IDL.Text,
-    'votingPower' : IDL.Nat64,
+    'votingPower' : IDL.Nat32,
     'userAddress' : IDL.Text,
-    'timestamp' : IDL.Nat64,
+    'timestamp' : IDL.Nat32,
   });
   const InsertProposolaWithOption = IDL.Record({
     'title' : IDL.Text,
     'mechanism' : IDL.Text,
-    'dateCreated' : IDL.Nat64,
+    'dateCreated' : IDL.Nat32,
     'description' : IDL.Text,
-    'spaceId' : IDL.Nat64,
+    'spaceId' : IDL.Nat32,
     'commaSeparatedOptions' : IDL.Text,
   });
   const Space = IDL.Record({
-    'id' : IDL.Nat64,
+    'id' : IDL.Nat32,
     'websiteLink' : IDL.Text,
     'name' : IDL.Text,
-    'minVoteRole' : IDL.Nat64,
+    'minVoteRole' : IDL.Nat32,
     'iconLink' : IDL.Text,
-    'voteDuration' : IDL.Nat64,
-    'voteDelay' : IDL.Nat64,
-    'minVotePower' : IDL.Nat64,
-    'quorum' : IDL.Nat64,
+    'voteDuration' : IDL.Nat32,
+    'voteDelay' : IDL.Nat32,
+    'minVotePower' : IDL.Nat32,
+    'quorum' : IDL.Nat32,
   });
-  const QueryParams = IDL.Record({ 'offset' : IDL.Nat64, 'limit' : IDL.Nat64 });
+  const QueryParams = IDL.Record({ 'offset' : IDL.Nat32, 'limit' : IDL.Nat32 });
   return IDL.Service({
     'create' : IDL.Func([], [Result], []),
     'drop' : IDL.Func([], [Result], []),

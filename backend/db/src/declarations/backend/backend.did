@@ -11,76 +11,76 @@ type Result = variant {
 };
 
 type Space = record {
-    id: nat64;
+    id: nat32;
     name: text;
     iconLink : text;
     websiteLink : text;
-    voteDelay: nat64;
-    voteDuration: nat64;
-    minVoteRole: nat64;
-    minVotePower: nat64;
-    quorum: nat64;
+    voteDelay: nat32;
+    voteDuration: nat32;
+    minVoteRole: nat32;
+    minVotePower: nat32;
+    quorum: nat32;
 };
 
 
 type Strategy = record {
-    id: nat64;
+    id: nat32;
     name: text;
-    spaceId: nat64;
-    btcId: nat64;
-    evmId: nat64;
+    spaceId: nat32;
+    btcId: nat32;
+    evmId: nat32;
 };
 
 
 type BtcStrategy = record {
-    id: nat64;
+    id: nat32;
     runeId: text;
 };
 
 type QueryParams = record {
-    limit: nat64;
-    offset: nat64;
+    limit: nat32;
+    offset: nat32;
 };
 
 type GetByIdParams = record {
-    id: nat64;
+    id: nat32;
 };
 
 type GetByAdressAndIdParams = record {
-    id: nat64;
+    id: nat32;
     address: text;
 };
 
 type InsertBtcStrategy = record {
     name: text;
-    spaceId: nat64;
+    spaceId: nat32;
     runeId: text;
 };
 
 type GetBtcStrategy = record {
-    id: nat64;
+    id: nat32;
     name: text;
     description: text;
-    spaceId: nat64;
+    spaceId: nat32;
     runeId: text;
 };
 
 type InsertEvmStrategy = record {
     name: text;
     description: text;
-    spaceId: nat64;
-    chainId: nat64;
+    spaceId: nat32;
+    chainId: nat32;
     contractAddress: text;
     configString: text;
 };
 
 
 type GetEvmStrategy = record {
-    id: nat64;
+    id: nat32;
     name: text;
     description: text;
-    spaceId: nat64;
-    chainId: nat64;
+    spaceId: nat32;
+    chainId: nat32;
     contractAddress: text;
     configString: text;
 };
@@ -89,43 +89,43 @@ type InsertProposolaWithOption = record {
     title: text;
     description: text;
     mechanism: text;
-    dateCreated: nat64;
-    spaceId: nat64;
+    dateCreated: nat32;
+    spaceId: nat32;
     commaSeparatedOptions: text;
 };
 
 type InsertProposalOptionVote = record {
     userAddress: text;
     voteType: text;
-    timestamp: nat64;
+    timestamp: nat32;
     signature: text;
-    votingPower: nat64;
-    optionId: nat64;
+    votingPower: nat32;
+    optionId: nat32;
 };
 
 type Proposal = record {
-    id: nat64;
+    id: nat32;
     title: text;
     description: text;
-    dateCreated: nat64;
+    dateCreated: nat32;
     mechanism: text;
-    spaceId: nat64;
+    spaceId: nat32;
 };
 
 type ProposalOption = record {
-    id: nat64;
+    id: nat32;
     name: text;
-    proposalId: nat64;
+    proposalId: nat32;
 };
 
 type ProposalOptionVote = record {
-    id: nat64;
+    id: nat32;
     userAddress: text;
     voteType: text;
-    timestamp: nat64;
+    timestamp: nat32;
     signature: text;
-    votingPower: nat64;
-    optionId: nat64;
+    votingPower: nat32;
+    optionId: nat32;
 };
 
 
