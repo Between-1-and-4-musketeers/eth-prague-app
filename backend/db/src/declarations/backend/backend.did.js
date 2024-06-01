@@ -83,6 +83,7 @@ export const idlFactory = ({ IDL }) => {
         [Result],
         ['query'],
       ),
+    'get_all_space_events' : IDL.Func([], [Result], ['query']),
     'get_all_space_events_by_space_id' : IDL.Func(
         [GetByIdParams],
         [Result],

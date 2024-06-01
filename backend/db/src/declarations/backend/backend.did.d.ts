@@ -120,6 +120,7 @@ export interface _SERVICE {
   'drop' : ActorMethod<[], Result>,
   'get_all_btc_strategies_by_space_id' : ActorMethod<[GetByIdParams], Result>,
   'get_all_evm_strategies_by_space_id' : ActorMethod<[GetByIdParams], Result>,
+  'get_all_space_events' : ActorMethod<[], Result>,
   'get_all_space_events_by_space_id' : ActorMethod<[GetByIdParams], Result>,
   'get_proposal_option_by_user_adress_and_proposal_id' : ActorMethod<
     [GetByAdressAndIdParams],

@@ -541,6 +541,45 @@ fn get_all_space_events_by_space_id(params: GetByIdParams) -> Result {
     }
     let res = serde_json::to_string(&strategies).unwrap();
     Ok(res)
+}#[query]
+
+fn get_all_space_events() -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    let mut stmt = match conn.prepare(
+        "
+        select id, eventtype, webhookurl, payload, spaceid from SpaceEvents;
+
+    ",
+    ) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let strategies_iter = match stmt.query_map([], |row| {
+        Ok(SpaceEvent {
+            id: row.get(0).unwrap(),
+            eventtype: row.get(1).unwrap(),
+            webhookUrl: row.get(2).unwrap(),
+            payload: row.get(3).unwrap(),
+            spaceId: row.get(4).unwrap(),
+        })
+    }) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let mut strategies = Vec::new();
+    for strategy in strategies_iter {
+        strategies.push(strategy.unwrap());
+    }
+    let res = serde_json::to_string(&strategies).unwrap();
+    Ok(res)
 }
 
 // #[query]

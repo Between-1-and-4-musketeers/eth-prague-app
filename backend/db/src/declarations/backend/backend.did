@@ -157,6 +157,7 @@ service : {
     "get_all_btc_strategies_by_space_id": (GetByIdParams) -> (Result) query;
     "get_all_evm_strategies_by_space_id": (GetByIdParams) -> (Result) query;
     "get_all_space_events_by_space_id":(GetByIdParams) -> (Result) query;
+    "get_all_space_events":() -> (Result) query;
     "insert_space": (Space) -> (Result);
     "insert_btc_strategy": (InsertBtcStrategy) -> (Result);
     "insert_evm_strategy": (InsertEvmStrategy) -> (Result);
