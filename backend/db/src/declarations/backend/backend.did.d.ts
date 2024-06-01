@@ -5,6 +5,7 @@ import type { IDL } from '@dfinity/candid';
 export interface BtcStrategy { 'id' : bigint, 'runeId' : string }
 export type Error = { 'CanisterError' : { 'message' : string } } |
   { 'InvalidCanister' : null };
+export interface GetByAdressAndIdParams { 'id' : bigint, 'address' : string }
 export interface GetByIdParams { 'id' : bigint }
 export interface InsertBtcStrategy {
   'runeId' : string,
@@ -17,6 +18,14 @@ export interface InsertEvmStrategy {
   'spaceId' : bigint,
   'chainId' : bigint,
   'contactAddress' : string,
+}
+export interface InsertProposalOptionVote {
+  'signature' : string,
+  'optionId' : bigint,
+  'voteType' : string,
+  'votingPower' : bigint,
+  'userAddress' : string,
+  'timestamp' : bigint,
 }
 export interface InsertProposolaWithOption {
   'title' : string,
@@ -50,15 +59,27 @@ export interface Strategy {
 export interface _SERVICE {
   'create' : ActorMethod<[], Result>,
   'drop' : ActorMethod<[], Result>,
-  'get_proposals_voting_power' : ActorMethod<[QueryParams], Result>,
+  'get_proposal_option_by_user_adress_and_proposal_id' : ActorMethod<
+    [GetByAdressAndIdParams],
+    Result
+  >,
+  'get_proposals_with_voting_power_by_proposal_id' : ActorMethod<
+    [GetByIdParams],
+    Result
+  >,
   'insert_btc_strategy' : ActorMethod<[InsertBtcStrategy], Result>,
   'insert_evm_strategy' : ActorMethod<[InsertEvmStrategy], Result>,
+  'insert_proposal_option_vote' : ActorMethod<
+    [InsertProposalOptionVote],
+    Result
+  >,
   'insert_proposal_with_option' : ActorMethod<
     [InsertProposolaWithOption],
     Result
   >,
   'insert_space' : ActorMethod<[Space], Result>,
   'query_all_spaces' : ActorMethod<[QueryParams], Result>,
+  'query_proposal_by_id' : ActorMethod<[GetByIdParams], Result>,
   'query_proposals_by_space_id' : ActorMethod<[GetByIdParams], Result>,
   'query_spaces_by_id' : ActorMethod<[GetByIdParams], Result>,
 }

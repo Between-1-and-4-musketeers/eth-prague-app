@@ -38,9 +38,9 @@ fn create() -> Result {
            IconLink TEXT NULL,
            VoteDelay INTEGER NOT NULL,
            VoteDuration INTEGER NOT NULL,
-           Quorum INTEGER NOT NULL
+           Quorum INTEGER NOT NULL,
            MinVoteRole INTEGER NOT NULL,
-           MinVotePower INTEGER NOT NULL,
+           MinVotePower INTEGER NOT NULL
        );
        
        CREATE TABLE AdminSpaces (
@@ -79,16 +79,28 @@ fn create() -> Result {
            CONSTRAINT FK_ProposalOptions_Proposals_ProposalId FOREIGN KEY (ProposalId) REFERENCES Proposals (Id) ON DELETE CASCADE
        );
        
-       CREATE TABLE ProposalOptionVotes (
-           Id INTEGER NOT NULL CONSTRAINT PK_ProposalOptionVotes PRIMARY KEY AUTOINCREMENT,
-           UserAddress TEXT NOT NULL,
-           type INTEGER NOT NULL,
-           timestamp INTEGER NOT NULL,
-           signature TEXT NOT NULL,
+       CREATE TABLE ProposalOptionVotes
+       (
+           Id          INTEGER NOT NULL
+               CONSTRAINT PK_ProposalOptionVotes PRIMARY KEY AUTOINCREMENT,
+           UserAddress TEXT    NOT NULL,
+           type        INTEGER NOT NULL,
+           timestamp   INTEGER NOT NULL,
+           signature   TEXT    NOT NULL,
            VotingPower INTEGER NOT NULL,
-           OptionId INTEGER NOT NULL,
-           CONSTRAINT FK_ProposalOptionVotes_ProposalOptions_OptionId FOREIGN KEY (OptionId) REFERENCES ProposalOptions (Id) ON DELETE CASCADE
+           OptionId    INTEGER NOT NULL,
+           CONSTRAINT FK_ProposalOptionVotes_ProposalOptions_OptionId FOREIGN KEY (OptionId) REFERENCES ProposalOptions (Id) ON DELETE CASCADE,
+           CONSTRAINT Unique_Vote UNIQUE(OptionId,UserAddress)
        );
+
+       CREATE TABLE ProposalBlocks(
+        Id INTEGER NOT NULL CONSTRAINT PK_Proposals PRIMARY KEY AUTOINCREMENT,
+        Type INTEGER NOT NULL,
+        ChainId INTEGER NOT NULL,
+        BlockNumber INTEGER NOT NULL,
+        ProposalID INTEGER NOT NULL,
+        CONSTRAINT FK_ProposalBlocks_Proposals_BtcId FOREIGN KEY (ProposalID) REFERENCES Proposals (Id) ON DELETE CASCADE
+    );
        
        CREATE INDEX IX_AdminSpaces_SpaceID ON AdminSpaces (SpaceID);
        
@@ -103,6 +115,8 @@ fn create() -> Result {
        CREATE UNIQUE INDEX IX_Strategies_EvmId ON Strategies (EvmId);
        
        CREATE INDEX IX_Strategies_SpaceId ON Strategies (SpaceId);
+
+       CREATE INDEX IX_ProposalBlocks_ProposalId ON ProposalBlocks (ProposalID);
        
        END TRANSACTION;"
     )
@@ -219,7 +233,47 @@ fn query_spaces_by_id(params: GetByIdParams) -> Result {
     for space in spaces_iter {
         spaces.push(space.unwrap());
     }
-    let res = serde_json::to_string(&spaces[0]).unwrap();
+    let res = serde_json::to_string(&spaces.first()).unwrap();
+    if res == "null" {
+        return Ok("[]".to_string());
+    }
+    Ok(res)
+}
+
+#[query]
+fn query_proposal_by_id(params: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    let mut stmt = match conn.prepare("select * from Proposals where id = ?1 limit 1") {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+
+    let proposals_iter = match stmt.query_map([params.id], |row| {
+        Ok(Proposal {
+            id: row.get(0).unwrap(),
+            title: row.get(1).unwrap(),
+            description: row.get(2).unwrap(),
+            mechanism: row.get(3).unwrap(),
+            dateCreated: row.get(4).unwrap(),
+            spaceId: row.get(5).unwrap(),
+        })
+    }) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let mut proposals = Vec::new();
+    for proposal in proposals_iter {
+        proposals.push(proposal.unwrap());
+    }
+    let res = serde_json::to_string(&proposals.first()).unwrap();
     if res == "null" {
         return Ok("[]".to_string());
     }
@@ -244,52 +298,9 @@ fn query_proposals_by_space_id(params: GetByIdParams) -> Result {
             id: row.get(0).unwrap(),
             title: row.get(1).unwrap(),
             description: row.get(2).unwrap(),
-            quorum: row.get(3).unwrap(),
+            mechanism: row.get(3).unwrap(),
             dateCreated: row.get(4).unwrap(),
-            mechanism: row.get(5).unwrap(),
-            spaceId: row.get(6).unwrap(),
-        })
-    }) {
-        Ok(e) => e,
-        Err(err) => {
-            return Err(Error::CanisterError {
-                message: format!("{:?}", err),
-            })
-        }
-    };
-    let mut proposals = Vec::new();
-    for proposal in proposals_iter {
-        proposals.push(proposal.unwrap());
-    }
-    let res = serde_json::to_string(&proposals.first()).unwrap();
-    if res == "null" {
-        return Ok("[]".to_string());
-    }
-    Ok(res)
-}
-
-#[query]
-fn get_proposals_voting_power(proposalId: usize) -> Result {
-    let conn = ic_sqlite::CONN.lock().unwrap();
-    let mut stmt = match conn.prepare(
-        "
-        select o.Id, sum(v.VotingPower)
-        from ProposalOptions o left join ProposalOptionVotes v on o.Id = v.OptionId
-        where (o.ProposalId = ?1)
-        group by o.Id;
-    ",
-    ) {
-        Ok(e) => e,
-        Err(err) => {
-            return Err(Error::CanisterError {
-                message: format!("{:?}", err),
-            })
-        }
-    };
-    let proposals_iter = match stmt.query_map([proposalId], |row| {
-        Ok(GetProposalVotingPower {
-            id: row.get(0).unwrap(),
-            power: row.get(1).unwrap(),
+            spaceId: row.get(5).unwrap(),
         })
     }) {
         Ok(e) => e,
@@ -304,6 +315,93 @@ fn get_proposals_voting_power(proposalId: usize) -> Result {
         proposals.push(proposal.unwrap());
     }
     let res = serde_json::to_string(&proposals).unwrap();
+    if res == "null" {
+        return Ok("[]".to_string());
+    }
+    Ok(res)
+}
+
+#[query]
+fn get_proposals_with_voting_power_by_proposal_id(params: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    let mut stmt = match conn.prepare(
+        "
+        SELECT o.Id, o.Name, IFNULL(sum(ALL v.VotingPower), 0) AS votingSum
+        FROM ProposalOptions o
+                 left join ProposalOptionVotes v on o.Id = v.OptionId
+        WHERE (o.ProposalId = ?1)
+        GROUP BY o.Id, o.Name;
+    ",
+    ) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let proposals_iter = match stmt.query_map([params.id], |row| {
+        Ok(GetProposalVotingPower {
+            id: row.get(0).unwrap(),
+            name: row.get(1).unwrap(),
+            power: row.get(2).unwrap(),
+        })
+    }) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let mut proposals = Vec::new();
+    for proposal in proposals_iter {
+        proposals.push(proposal.unwrap());
+    }
+    let res = serde_json::to_string(&proposals).unwrap();
+    Ok(res)
+}
+
+#[query]
+fn get_proposal_option_by_user_adress_and_proposal_id(params: GetByAdressAndId) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    let mut stmt = match conn.prepare(
+        "
+        SELECT POV.Id, POV.UserAddress, POV.type, POV.timestamp, POV.signature, POV.VotingPower, POV.OptionId FROM
+        ProposalOptionVotes POV join ProposalOptions PO on POV.OptionId = PO.Id join Proposals P on PO.ProposalId = P.Id
+        WHERE P.Id = ?1 AND POV.UserAddress = ?2
+    ",
+    ) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let proposals_iter = match stmt.query_map((params.id, params.address), |row| {
+        Ok(ProposalOptionVote {
+            id: row.get(0).unwrap(),
+            userAddress: row.get(1).unwrap(),
+            voteType: row.get(2).unwrap(),
+            timestamp: row.get(3).unwrap(),
+            signature: row.get(4).unwrap(),
+            votingPower: row.get(5).unwrap(),
+            optionId: row.get(6).unwrap(),
+        })
+    }) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let mut proposals = Vec::new();
+    for proposal in proposals_iter {
+        proposals.push(proposal.unwrap());
+    }
+    let res = serde_json::to_string(&proposals.first()).unwrap();
     Ok(res)
 }
 
@@ -453,6 +551,7 @@ fn insert_proposal_with_option(insertProposal: InsertProposolaWithOption) -> Res
             insertProposal.title,
             insertProposal.description,
             insertProposal.mechanism,
+            insertProposal.dateCreated,
             insertProposal.spaceId,
         ),
     );
@@ -461,7 +560,7 @@ fn insert_proposal_with_option(insertProposal: InsertProposolaWithOption) -> Res
     for part in parts {
         let res3 = conn.execute(
             "insert into ProposalOptions (Name, ProposalId)
-            VALUES (?1,(SELECT seq FROM SQLITE_SEQUENCE WHERE name='Proposals'));",
+            VALUES (?1, (SELECT seq FROM SQLITE_SEQUENCE WHERE name='Proposals'));",
             [part],
         );
         match res3 {
@@ -497,6 +596,23 @@ fn insert_proposal_with_option(insertProposal: InsertProposolaWithOption) -> Res
     }
 
     return Ok(format!("{:?}", "OK"));
+}
+
+#[update]
+fn insert_proposal_option_vote(vote: InsertProposalOptionVote) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    return match conn.execute(
+        "insert into ProposalOptionVotes(useraddress, type, timestamp, signature, votingpower, optionid)
+        values (?1, ?2, ?3, ?4, ?5, ?6);",
+        (
+          vote.userAddress, vote.voteType, vote.timestamp, vote.signature, vote.votingPower, vote.optionId
+        ),
+    ) {
+        Ok(e) => Ok(format!("{:?}", e)),
+        Err(err) => Err(Error::CanisterError {
+            message: format!("{:?}", err),
+        }),
+    };
 }
 
 // #[update]
@@ -560,7 +676,6 @@ struct Proposal {
     id: usize,
     title: String,
     description: String,
-    quorum: usize,
     dateCreated: usize,
     mechanism: String,
     // space: Option<Space>,
@@ -579,11 +694,12 @@ struct ProposalOption {
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct ProposalOptionVote {
     id: usize,
-    userAdress: String,
+    userAddress: String,
     voteType: String,
     timestamp: usize,
     signature: String,
-    option: Option<ProposalOption>,
+    votingPower: usize,
+    optionId: usize,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
@@ -630,6 +746,12 @@ struct GetByIdParams {
     id: usize,
 }
 
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct GetByAdressAndId {
+    id: usize,
+    address: String,
+}
+
 // #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 // struct FilterParams {
 //     name: String,
@@ -668,11 +790,22 @@ struct InsertProposolaWithOption {
     commaSeparatedOptions: String,
 }
 
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct InsertProposalOptionVote {
+    userAddress: String,
+    voteType: String,
+    timestamp: usize,
+    signature: String,
+    votingPower: usize,
+    optionId: usize,
+}
+
 //----------------- Selects -----------------
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct GetProposalVotingPower {
     id: usize,
+    name: String,
     power: usize,
 }
 

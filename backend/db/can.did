@@ -46,6 +46,10 @@ type GetByIdParams = record {
     id: nat64;
 };
 
+type GetByAdressAndIdParams = record {
+    id: nat64;
+    address: text;
+};
 
 type InsertBtcStrategy = record {
     name: text;
@@ -71,15 +75,27 @@ type InsertProposolaWithOption = record {
     commaSeparatedOptions: text;
 };
 
+type InsertProposalOptionVote = record {
+    userAddress: text;
+    voteType: text;
+    timestamp: nat64;
+    signature: text;
+    votingPower: nat64;
+    optionId: nat64;
+};
+
 service : {
     "create": () -> (Result);
     "drop": () -> (Result);
     "query_all_spaces": (QueryParams) -> (Result) query;
     "query_spaces_by_id": (GetByIdParams) -> (Result) query;
+    "query_proposal_by_id": (GetByIdParams) -> (Result) query;
     "query_proposals_by_space_id": (GetByIdParams) -> (Result) query;
-    "get_proposals_voting_power": (QueryParams) -> (Result) query;
+    "get_proposals_with_voting_power_by_proposal_id": (GetByIdParams) -> (Result) query;
+    "get_proposal_option_by_user_adress_and_proposal_id": (GetByAdressAndIdParams) -> (Result) query;
     "insert_space": (Space) -> (Result);
     "insert_btc_strategy": (InsertBtcStrategy) -> (Result);
     "insert_evm_strategy": (InsertEvmStrategy) -> (Result);
     "insert_proposal_with_option": (InsertProposolaWithOption) -> (Result);
+    "insert_proposal_option_vote": (InsertProposalOptionVote) -> (Result);
 }
