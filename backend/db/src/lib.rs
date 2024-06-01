@@ -405,6 +405,88 @@ fn get_proposal_option_by_user_adress_and_proposal_id(params: GetByAdressAndId) 
     Ok(res)
 }
 
+#[query]
+fn get_all_btc_strategies_by_space_id(params: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    let mut stmt = match conn.prepare(
+        "
+        SELECT Strategies.Id, name, spaceid,runeid
+FROM Strategies
+         LEFT JOIN BtcStrategies BS on BS.Id = Strategies.BtcId where Strategies.SpaceId = ?1 and BtcId is not null;
+    ",
+    ) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let strategies_iter = match stmt.query_map([params.id], |row| {
+        Ok(GetBtcStrategy {
+            id: row.get(0).unwrap(),
+            name: row.get(1).unwrap(),
+            spaceId: row.get(2).unwrap(),
+            runeId: row.get(3).unwrap(),
+        })
+    }) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let mut strategies = Vec::new();
+    for strategy in strategies_iter {
+        strategies.push(strategy.unwrap());
+    }
+    let res = serde_json::to_string(&strategies).unwrap();
+    Ok(res)
+}
+
+#[query]
+fn get_all_evm_strategies_by_space_id(params: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    let mut stmt = match conn.prepare(
+        "
+        SELECT Strategies.Id, name, spaceid,ChainId,ContactAddress,ConfigString
+        FROM Strategies
+                 LEFT JOIN EvmStrategies EVM on EVM.Id = Strategies.EvmId where Strategies.SpaceId = ?1 and EvmId is not null;
+    ",
+    ) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let strategies_iter = match stmt.query_map([params.id], |row| {
+        Ok(GetEvmStrategy {
+            id: row.get(0).unwrap(),
+            name: row.get(1).unwrap(),
+            spaceId: row.get(2).unwrap(),
+            chainId: row.get(3).unwrap(),
+            contactAddress: row.get(4).unwrap(),
+            configString: row.get(5).unwrap(),
+        })
+    }) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let mut strategies = Vec::new();
+    for strategy in strategies_iter {
+        strategies.push(strategy.unwrap());
+    }
+    let res = serde_json::to_string(&strategies).unwrap();
+    Ok(res)
+}
+
 // #[query]
 // fn query_filter(params: FilterParams) -> Result {
 //     let conn = ic_sqlite::CONN.lock().unwrap();
@@ -734,6 +816,24 @@ struct EvmStrategy {
 //     name: String,
 //     age: usize,
 // }
+
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct GetBtcStrategy {
+    id: usize,
+    name: String,
+    spaceId: usize,
+    runeId: String,
+}
+
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct GetEvmStrategy {
+    id: usize,
+    name: String,
+    spaceId: usize,
+    chainId: usize,
+    contactAddress: String,
+    configString: String,
+}
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct QueryParams {

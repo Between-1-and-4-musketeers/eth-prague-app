@@ -5,8 +5,22 @@ import type { IDL } from '@dfinity/candid';
 export interface BtcStrategy { 'id' : bigint, 'runeId' : string }
 export type Error = { 'CanisterError' : { 'message' : string } } |
   { 'InvalidCanister' : null };
+export interface GetBtcStrategy {
+  'id' : bigint,
+  'runeId' : string,
+  'name' : string,
+  'spaceId' : bigint,
+}
 export interface GetByAdressAndIdParams { 'id' : bigint, 'address' : string }
 export interface GetByIdParams { 'id' : bigint }
+export interface GetEvmStrategy {
+  'id' : bigint,
+  'name' : string,
+  'configString' : string,
+  'spaceId' : bigint,
+  'chainId' : bigint,
+  'contactAddress' : string,
+}
 export interface InsertBtcStrategy {
   'runeId' : string,
   'name' : string,
@@ -81,6 +95,8 @@ export interface Strategy {
 export interface _SERVICE {
   'create' : ActorMethod<[], Result>,
   'drop' : ActorMethod<[], Result>,
+  'get_all_btc_strategies_by_space_id' : ActorMethod<[GetByIdParams], Result>,
+  'get_all_evm_strategies_by_space_id' : ActorMethod<[GetByIdParams], Result>,
   'get_proposal_option_by_user_adress_and_proposal_id' : ActorMethod<
     [GetByAdressAndIdParams],
     Result

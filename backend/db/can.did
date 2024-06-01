@@ -57,6 +57,13 @@ type InsertBtcStrategy = record {
     runeId: text;
 };
 
+type GetBtcStrategy = record {
+    id: nat64;
+    name: text;
+    spaceId: nat64;
+    runeId: text;
+};
+
 type InsertEvmStrategy = record {
     name: text;
     spaceId: nat64;
@@ -65,6 +72,15 @@ type InsertEvmStrategy = record {
     configString: text;
 };
 
+
+type GetEvmStrategy = record {
+    id: nat64;
+    name: text;
+    spaceId: nat64;
+    chainId: nat64;
+    contactAddress: text;
+    configString: text;
+};
 
 type InsertProposolaWithOption = record {
     title: text;
@@ -119,6 +135,8 @@ service : {
     "query_proposals_by_space_id": (GetByIdParams) -> (Result) query;
     "get_proposals_with_voting_power_by_proposal_id": (GetByIdParams) -> (Result) query;
     "get_proposal_option_by_user_adress_and_proposal_id": (GetByAdressAndIdParams) -> (Result) query;
+    "get_all_btc_strategies_by_space_id": (GetByIdParams) -> (Result) query;
+    "get_all_evm_strategies_by_space_id": (GetByIdParams) -> (Result) query;
     "insert_space": (Space) -> (Result);
     "insert_btc_strategy": (InsertBtcStrategy) -> (Result);
     "insert_evm_strategy": (InsertEvmStrategy) -> (Result);

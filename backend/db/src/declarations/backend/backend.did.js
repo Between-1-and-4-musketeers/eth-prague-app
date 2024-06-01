@@ -4,11 +4,11 @@ export const idlFactory = ({ IDL }) => {
     'InvalidCanister' : IDL.Null,
   });
   const Result = IDL.Variant({ 'Ok' : IDL.Text, 'Err' : Error });
+  const GetByIdParams = IDL.Record({ 'id' : IDL.Nat64 });
   const GetByAdressAndIdParams = IDL.Record({
     'id' : IDL.Nat64,
     'address' : IDL.Text,
   });
-  const GetByIdParams = IDL.Record({ 'id' : IDL.Nat64 });
   const InsertBtcStrategy = IDL.Record({
     'runeId' : IDL.Text,
     'name' : IDL.Text,
@@ -52,6 +52,16 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     'create' : IDL.Func([], [Result], []),
     'drop' : IDL.Func([], [Result], []),
+    'get_all_btc_strategies_by_space_id' : IDL.Func(
+        [GetByIdParams],
+        [Result],
+        ['query'],
+      ),
+    'get_all_evm_strategies_by_space_id' : IDL.Func(
+        [GetByIdParams],
+        [Result],
+        ['query'],
+      ),
     'get_proposal_option_by_user_adress_and_proposal_id' : IDL.Func(
         [GetByAdressAndIdParams],
         [Result],
