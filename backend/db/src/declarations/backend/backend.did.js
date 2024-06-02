@@ -15,6 +15,7 @@ export const idlFactory = ({ IDL }) => {
     'spaceId' : IDL.Nat32,
   });
   const InsertEvmStrategy = IDL.Record({
+    'id' : IDL.Nat32,
     'name' : IDL.Text,
     'description' : IDL.Text,
     'configString' : IDL.Text,

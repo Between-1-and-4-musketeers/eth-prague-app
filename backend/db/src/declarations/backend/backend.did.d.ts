@@ -29,6 +29,7 @@ export interface InsertBtcStrategy {
   'spaceId' : number,
 }
 export interface InsertEvmStrategy {
+  'id' : number,
   'name' : string,
   'description' : string,
   'configString' : string,

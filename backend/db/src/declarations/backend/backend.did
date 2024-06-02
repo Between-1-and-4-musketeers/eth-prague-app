@@ -74,6 +74,7 @@ type SpaceEvent = record {
 };
 
 type InsertEvmStrategy = record {
+    id: nat32;
     name: text;
     description: text;
     spaceId: nat32;

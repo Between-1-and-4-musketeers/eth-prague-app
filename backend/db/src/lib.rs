@@ -478,7 +478,7 @@ fn get_proposal_options_by_proposal_id(params: GetByIdParams) -> Result {
     };
     let proposals_iter = match stmt.query_map([params.id], |row| {
         Ok(ProposalOption {
-            id: row.get(0).unwrap(),    
+            id: row.get(0).unwrap(),
             name: row.get(1).unwrap(),
             proposalId: row.get(2).unwrap(),
         })
@@ -582,7 +582,6 @@ fn get_all_evm_strategies_by_space_id(params: GetByIdParams) -> Result {
     Ok(res)
 }
 
-
 #[query]
 fn get_all_space_events_by_space_id(params: GetByIdParams) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
@@ -621,7 +620,8 @@ fn get_all_space_events_by_space_id(params: GetByIdParams) -> Result {
     }
     let res = serde_json::to_string(&strategies).unwrap();
     Ok(res)
-}#[query]
+}
+#[query]
 
 fn get_all_space_events() -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
@@ -788,42 +788,82 @@ fn insert_btc_strategy(insertBtc: InsertBtcStrategy) -> Result {
 #[update]
 fn insert_evm_strategy(insertEvm: InsertEvmStrategy) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
-    let res1 = conn.execute("BEGIN TRANSACTION;", []);
-    let res2 = conn.execute(
-        "insert into EvmStrategies(ChainId,ContractAddress,ConfigString) values (?1,?2,?3);",
-        (
-            insertEvm.chainId,
-            insertEvm.contractAddress,
-            insertEvm.configString,
-        ),
-    );
-    let res3 = conn.execute(
-        " insert into Strategies(Name,Description, SpaceId,EvmId)
+    if insertEvm.id == 0 {
+        let res1 = conn.execute("BEGIN TRANSACTION;", []);
+        let res2 = conn.execute(
+            "insert into EvmStrategies(ChainId,ContractAddress,ConfigString) values (?1,?2,?3);",
+            (
+                insertEvm.chainId,
+                insertEvm.contractAddress,
+                insertEvm.configString,
+            ),
+        );
+        let res3 = conn.execute(
+            " insert into Strategies(Name,Description, SpaceId,EvmId)
         values (?1,?2,?3, last_insert_rowid());",
-        (insertEvm.name, insertEvm.description, insertEvm.spaceId),
-    );
-    let res4 = conn.execute(
-        "
+            (insertEvm.name, insertEvm.description, insertEvm.spaceId),
+        );
+        let res4 = conn.execute(
+            "
         END TRANSACTION;
         ",
-        (),
-    );
+            (),
+        );
 
-    let pole = [res1, res2, res3, res4];
+        let pole = [res1, res2, res3, res4];
 
-    for i in pole.iter() {
-        match i {
-            Ok(e) => continue,
-            Err(err) => {
-                let _ = conn.execute("ROLLBACK;", []);
-                return Err(Error::CanisterError {
-                    message: format!("{:?}", err),
-                });
-            }
-        };
+        for i in pole.iter() {
+            match i {
+                Ok(e) => continue,
+                Err(err) => {
+                    let _ = conn.execute("ROLLBACK;", []);
+                    return Err(Error::CanisterError {
+                        message: format!("{:?}", err),
+                    });
+                }
+            };
+        }
+
+        return Ok(format!("{:?}", "OK"));
     }
+    else{
+        let res1 = conn.execute("BEGIN TRANSACTION;", []);
+        let res2 = conn.execute(
+            "Update EvmStrategies SET ChainId=?2, ContractAddress=?3,ConfigString=?4 where (select EvmId from Strategies where Id=?1);",
+            (
+                insertEvm.id,
+                insertEvm.chainId,
+                insertEvm.contractAddress,
+                insertEvm.configString,
+            ),
+        );
+        let res3 = conn.execute(
+            "UPDATE Strategies SET Name=?2,Description=?3,spaceId=?4 WHERE Id = ?1;",
+            (insertEvm.id,insertEvm.name, insertEvm.description, insertEvm.spaceId),
+        );
+        let res4 = conn.execute(
+            "
+        END TRANSACTION;
+        ",
+            (),
+        );
 
-    return Ok(format!("{:?}", "OK"));
+        let pole = [res1, res2, res3, res4];
+
+        for i in pole.iter() {
+            match i {
+                Ok(e) => continue,
+                Err(err) => {
+                    let _ = conn.execute("ROLLBACK;", []);
+                    return Err(Error::CanisterError {
+                        message: format!("{:?}", err),
+                    });
+                }
+            };
+        }
+
+        return Ok(format!("{:?}", "OK"));
+    }
 }
 
 #[update]
@@ -841,9 +881,8 @@ fn insert_proposal_with_option(insertProposal: InsertProposolaWithOption) -> Res
             insertProposal.spaceId,
         ),
     );
-    if let Some(options) = insertProposal.commaSeparatedOptions
-    {
-     let parts = options.split(",");
+    if let Some(options) = insertProposal.commaSeparatedOptions {
+        let parts = options.split(",");
         for part in parts {
             let res3 = conn.execute(
                 "insert into ProposalOptions (Name, ProposalId)
@@ -923,7 +962,6 @@ fn insert_proposal_block(block: InsertProposalBlock) -> Result {
     };
 }
 
-
 #[update]
 fn insert_space_event(spaceEvents: SpaceEvent) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
@@ -964,7 +1002,6 @@ fn insert_space_event(spaceEvents: SpaceEvent) -> Result {
         }),
     };
 }
-
 
 #[update]
 fn delete_space(id: GetByIdParams) -> Result {
@@ -1041,7 +1078,7 @@ fn delete_space_event(id: GetByIdParams) -> Result {
             message: format!("{:?}", err),
         }),
     };
-} 
+}
 
 // #[update]
 // fn delete(id: usize) -> Result {
@@ -1192,7 +1229,6 @@ struct SpaceEvent {
     spaceId: u32,
 }
 
-
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct QueryParams {
     limit: u32,
@@ -1232,6 +1268,7 @@ struct InsertBtcStrategy {
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct InsertEvmStrategy {
+    id: u32,
     name: String,
     description: String,
     spaceId: u32,
