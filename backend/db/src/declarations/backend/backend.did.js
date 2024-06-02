@@ -42,7 +42,7 @@ export const idlFactory = ({ IDL }) => {
     'dateCreated' : IDL.Nat32,
     'description' : IDL.Text,
     'spaceId' : IDL.Nat32,
-    'commaSeparatedOptions' : IDL.Text,
+    'commaSeparatedOptions' : IDL.Opt(IDL.Text),
   });
   const Space = IDL.Record({
     'id' : IDL.Nat32,
@@ -91,6 +91,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'get_proposal_option_by_user_adress_and_proposal_id' : IDL.Func(
         [GetByAdressAndIdParams],
+        [Result],
+        ['query'],
+      ),
+    'get_proposal_options_by_proposal_id' : IDL.Func(
+        [GetByIdParams],
         [Result],
         ['query'],
       ),

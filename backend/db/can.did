@@ -99,7 +99,7 @@ type InsertProposolaWithOption = record {
     mechanism: nat32;
     dateCreated: nat32;
     spaceId: nat32;
-    commaSeparatedOptions: text;
+    commaSeparatedOptions: opt text;
 };
 
 type InsertProposalOptionVote = record {
@@ -154,6 +154,7 @@ service : {
     "query_proposals_by_space_id": (GetByIdParams) -> (Result) query;
     "get_proposals_with_voting_power_by_proposal_id": (GetByIdParams) -> (Result) query;
     "get_proposal_option_by_user_adress_and_proposal_id": (GetByAdressAndIdParams) -> (Result) query;
+    "get_proposal_options_by_proposal_id": (GetByIdParams) -> (Result) query;
     "get_all_btc_strategies_by_space_id": (GetByIdParams) -> (Result) query;
     "get_all_evm_strategies_by_space_id": (GetByIdParams) -> (Result) query;
     "get_all_space_events_by_space_id":(GetByIdParams) -> (Result) query;

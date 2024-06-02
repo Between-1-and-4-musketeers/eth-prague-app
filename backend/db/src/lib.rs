@@ -462,6 +462,43 @@ fn get_proposal_votes_by_proposal_id(params: GetByIdParams) -> Result {
 }
 
 #[query]
+fn get_proposal_options_by_proposal_id(params: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    let mut stmt = match conn.prepare(
+        "
+        select id, name, proposalid from ProposalOptions where proposalid = ?1;
+    ",
+    ) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let proposals_iter = match stmt.query_map([params.id], |row| {
+        Ok(ProposalOption {
+            id: row.get(0).unwrap(),    
+            name: row.get(1).unwrap(),
+            proposalId: row.get(2).unwrap(),
+        })
+    }) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let mut proposals = Vec::new();
+    for proposal in proposals_iter {
+        proposals.push(proposal.unwrap());
+    }
+    let res = serde_json::to_string(&proposals).unwrap();
+    Ok(res)
+}
+
+#[query]
 fn get_all_btc_strategies_by_space_id(params: GetByIdParams) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
     let mut stmt = match conn.prepare(
@@ -804,21 +841,23 @@ fn insert_proposal_with_option(insertProposal: InsertProposolaWithOption) -> Res
             insertProposal.spaceId,
         ),
     );
-
-    let parts = insertProposal.commaSeparatedOptions.split(",");
-    for part in parts {
-        let res3 = conn.execute(
-            "insert into ProposalOptions (Name, ProposalId)
-            VALUES (?1, (SELECT seq FROM SQLITE_SEQUENCE WHERE name='Proposals'));",
-            [part],
-        );
-        match res3 {
-            Ok(e) => continue,
-            Err(err) => {
-                let _ = conn.execute("ROLLBACK;", []);
-                return Err(Error::CanisterError {
-                    message: format!("{:?}", err),
-                });
+    if let Some(options) = insertProposal.commaSeparatedOptions
+    {
+     let parts = options.split(",");
+        for part in parts {
+            let res3 = conn.execute(
+                "insert into ProposalOptions (Name, ProposalId)
+                VALUES (?1, (SELECT seq FROM SQLITE_SEQUENCE WHERE name='Proposals'));",
+                [part],
+            );
+            match res3 {
+                Ok(e) => continue,
+                Err(err) => {
+                    let _ = conn.execute("ROLLBACK;", []);
+                    return Err(Error::CanisterError {
+                        message: format!("{:?}", err),
+                    });
+                }
             }
         }
     }
@@ -1208,7 +1247,7 @@ struct InsertProposolaWithOption {
     mechanism: u32,
     dateCreated: u32,
     spaceId: u32,
-    commaSeparatedOptions: String,
+    commaSeparatedOptions: Option<String>,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
