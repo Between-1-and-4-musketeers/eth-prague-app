@@ -73,9 +73,14 @@ fn create() -> Result {
            CONSTRAINT FK_Strategies_Spaces_SpaceId FOREIGN KEY (SpaceId) REFERENCES Spaces (Id) ON DELETE CASCADE
        );
        
-       CREATE TABLE ProposalOptions (
-           Id INTEGER NOT NULL CONSTRAINT PK_ProposalOptions PRIMARY KEY AUTOINCREMENT,
-           Name TEXT NOT NULL,
+       CREATE TABLE ProposalOptions
+       (
+           Id         INTEGER NOT NULL
+               CONSTRAINT PK_ProposalOptions PRIMARY KEY AUTOINCREMENT,
+           Name       TEXT    NOT NULL,
+           onWinContractAddress TEXT NOT NULL,
+           onWinBytecode TEXT NOT NULL,
+           onWinChainId INTEGER NOT NULL,
            ProposalId INTEGER NOT NULL,
            CONSTRAINT FK_ProposalOptions_Proposals_ProposalId FOREIGN KEY (ProposalId) REFERENCES Proposals (Id) ON DELETE CASCADE
        );
@@ -144,6 +149,72 @@ fn create() -> Result {
     };
 }
 
+
+#[update]
+fn seed_data() -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    // return match conn.execute("DROP TABLE Spaces", [])
+    return match conn.execute_batch(
+       "
+       BEGIN TRANSACTION;
+        insert into Spaces(id,name, iconlink, websitelink, minvoterole, minvotepower, votedelay, voteduration, quorum)
+            values (1,'FrajerCZ','https://pbs.twimg.com/profile_images/1528083447973138432/mzJJ6iaf_400x400.jpg',
+                    'https://x.com/ReformedRamsay',0,0,100000,10000,100);
+        insert into Spaces(id,name, iconlink, websitelink, minvoterole, minvotepower, votedelay, voteduration, quorum)
+            values (2,'Sushi','https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIwIAmAKD59SQKJIe3wA_s_OQXLqmYYZAO0Q&s',
+                    'sushi.com',2,2,2,2,2);
+
+        insert into EvmStrategies(chainid, contractaddress, configstring)
+        values (1,'0x6B3595068778DD592e39A122f4f5a5cF09C90fE2','0x70a08231000000000000000000000000$voterAddress');
+
+        INSERT INTO Strategies(Id,Name, SpaceId, EvmId)
+        VALUES (1,'sushak', 1,
+                (SELECT seq FROM SQLITE_SEQUENCE WHERE name = 'EvmStrategies'));
+
+
+        insert into SpaceEvents(Id,eventtype, webhookurl, payload, spaceid)
+        values (1,
+                0,
+                'https://discord.com/api/webhooks/1246613644213751828/AtvEBGU7OPtQ97jAM-ZW7A_GBCiy-sGu5bpHJSSFrLnxjSuqFckec0_VjPfj85u7ByA_',
+                '{ \"content\": \"Ahoj!\\nPepa s adresou ${voterAddress} prave votoval se silou ${power} CO DOPICE?! s😁😁\", \"embeds\": null, \"attachments\": [] }',
+                1);
+
+        insert into Proposals(id,title, description, mechanism, datecreated, spaceid)
+        values(2,'jo ?','pls vote',2,2,2);
+
+        insert into Proposals(id,title, description, mechanism, datecreated, spaceid)
+        values(1,'jit spat','chrr pspps lufi spi!',0,1717286697,1);
+
+        insert into ProposalOptions(id,name, proposalid)
+        values (3,'a',2);
+        insert into ProposalOptions(id,name, proposalid)
+        values (4,'b',2);
+        insert into ProposalOptions(id,name, proposalid)
+        values (5,'c',2);
+
+        insert into ProposalOptions(id,name,proposalid)
+        values (1,'Ano',1);
+        insert into ProposalOptions(id,name,proposalid)
+        values (2,'Ne',1);
+
+        insert into ProposalOptionVotes(id,UserAddress,type,timestamp,signature,VotingPower,OptionId)
+        values (1,'ahoj',1,2,'a',2,1);
+        insert into ProposalOptionVotes(id,UserAddress,type,timestamp,signature,VotingPower,OptionId)
+        values (2,'0xdc84b5f5957290e27daf8c0976d77b5af45baaaa',0,1717287836,'0x72085ce618d2a7641a65ea2331b29b18c3c662eb450a20abf4221c952eeee1fe00e3c7867ec6e93bcd1234b3941e53e3ddfcba9e2ed676b9bdd5064eebaee32b1c',3,2);
+        COMMIT;"
+    )
+    {
+        Ok(e) => Ok(format!("{:?}", e)),
+        Err(err) => {
+            let _ = conn.execute("ROLLBACK;", []);
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            });
+        }
+    };
+}
+
+
 #[update]
 fn drop() -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
@@ -155,6 +226,26 @@ fn drop() -> Result {
     
         PRAGMA writable_schema = 0;
         VACUUM;
+    ",
+    ) {
+        Ok(e) => Ok(format!("{:?}", e)),
+        Err(err) => {
+            let _ = conn.execute("ROLLBACK;", []);
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            });
+        }
+    };
+}
+
+#[update]
+fn alter() -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    return match conn.execute_batch(
+        "
+        alter table ProposalOptions add column onWinContractAddress TEXT NOT NULL default '';
+        alter table ProposalOptions add column onWinBytecode TEXT NOT NULL default '';
+        alter table ProposalOptions add column onWinChainId INTEGER NOT NULL default 0;
     ",
     ) {
         Ok(e) => Ok(format!("{:?}", e)),
@@ -466,7 +557,7 @@ fn get_proposal_options_by_proposal_id(params: GetByIdParams) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
     let mut stmt = match conn.prepare(
         "
-        select id, name, proposalid from ProposalOptions where proposalid = ?1;
+        select id, name, proposalid, onWinContractAddress, onWinBytecode, onWinChainId from ProposalOptions where proposalid = ?1;
     ",
     ) {
         Ok(e) => e,
@@ -478,9 +569,12 @@ fn get_proposal_options_by_proposal_id(params: GetByIdParams) -> Result {
     };
     let proposals_iter = match stmt.query_map([params.id], |row| {
         Ok(ProposalOption {
-            id: row.get(0).unwrap(),    
+            id: row.get(0).unwrap(),
             name: row.get(1).unwrap(),
             proposalId: row.get(2).unwrap(),
+            onWinContractAddress: row.get(3).unwrap(),
+            onWinBytecode: row.get(4).unwrap(),
+            onWinChainId: row.get(5).unwrap(),
         })
     }) {
         Ok(e) => e,
@@ -582,7 +676,6 @@ fn get_all_evm_strategies_by_space_id(params: GetByIdParams) -> Result {
     Ok(res)
 }
 
-
 #[query]
 fn get_all_space_events_by_space_id(params: GetByIdParams) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
@@ -621,7 +714,8 @@ fn get_all_space_events_by_space_id(params: GetByIdParams) -> Result {
     }
     let res = serde_json::to_string(&strategies).unwrap();
     Ok(res)
-}#[query]
+}
+#[query]
 
 fn get_all_space_events() -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
@@ -788,46 +882,86 @@ fn insert_btc_strategy(insertBtc: InsertBtcStrategy) -> Result {
 #[update]
 fn insert_evm_strategy(insertEvm: InsertEvmStrategy) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
-    let res1 = conn.execute("BEGIN TRANSACTION;", []);
-    let res2 = conn.execute(
-        "insert into EvmStrategies(ChainId,ContractAddress,ConfigString) values (?1,?2,?3);",
-        (
-            insertEvm.chainId,
-            insertEvm.contractAddress,
-            insertEvm.configString,
-        ),
-    );
-    let res3 = conn.execute(
-        " insert into Strategies(Name,Description, SpaceId,EvmId)
+    if insertEvm.id == 0 {
+        let res1 = conn.execute("BEGIN TRANSACTION;", []);
+        let res2 = conn.execute(
+            "insert into EvmStrategies(ChainId,ContractAddress,ConfigString) values (?1,?2,?3);",
+            (
+                insertEvm.chainId,
+                insertEvm.contractAddress,
+                insertEvm.configString,
+            ),
+        );
+        let res3 = conn.execute(
+            " insert into Strategies(Name,Description, SpaceId,EvmId)
         values (?1,?2,?3, last_insert_rowid());",
-        (insertEvm.name, insertEvm.description, insertEvm.spaceId),
-    );
-    let res4 = conn.execute(
-        "
+            (insertEvm.name, insertEvm.description, insertEvm.spaceId),
+        );
+        let res4 = conn.execute(
+            "
         END TRANSACTION;
         ",
-        (),
-    );
+            (),
+        );
 
-    let pole = [res1, res2, res3, res4];
+        let pole = [res1, res2, res3, res4];
 
-    for i in pole.iter() {
-        match i {
-            Ok(e) => continue,
-            Err(err) => {
-                let _ = conn.execute("ROLLBACK;", []);
-                return Err(Error::CanisterError {
-                    message: format!("{:?}", err),
-                });
-            }
-        };
+        for i in pole.iter() {
+            match i {
+                Ok(e) => continue,
+                Err(err) => {
+                    let _ = conn.execute("ROLLBACK;", []);
+                    return Err(Error::CanisterError {
+                        message: format!("{:?}", err),
+                    });
+                }
+            };
+        }
+
+        return Ok(format!("{:?}", "OK"));
     }
+    else{
+        let res1 = conn.execute("BEGIN TRANSACTION;", []);
+        let res2 = conn.execute(
+            "Update EvmStrategies SET ChainId=?2, ContractAddress=?3,ConfigString=?4 where (select EvmId from Strategies where Id=?1);",
+            (
+                insertEvm.id,
+                insertEvm.chainId,
+                insertEvm.contractAddress,
+                insertEvm.configString,
+            ),
+        );
+        let res3 = conn.execute(
+            "UPDATE Strategies SET Name=?2,Description=?3,spaceId=?4 WHERE Id = ?1;",
+            (insertEvm.id,insertEvm.name, insertEvm.description, insertEvm.spaceId),
+        );
+        let res4 = conn.execute(
+            "
+        END TRANSACTION;
+        ",
+            (),
+        );
 
-    return Ok(format!("{:?}", "OK"));
+        let pole = [res1, res2, res3, res4];
+
+        for i in pole.iter() {
+            match i {
+                Ok(e) => continue,
+                Err(err) => {
+                    let _ = conn.execute("ROLLBACK;", []);
+                    return Err(Error::CanisterError {
+                        message: format!("{:?}", err),
+                    });
+                }
+            };
+        }
+
+        return Ok(format!("{:?}", "OK"));
+    }
 }
 
 #[update]
-fn insert_proposal_with_option(insertProposal: InsertProposolaWithOption) -> Result {
+fn insert_proposal(insertProposal: InsertProposal) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
     let res1 = conn.execute("BEGIN TRANSACTION;", []);
     let res2 = conn.execute(
@@ -841,26 +975,6 @@ fn insert_proposal_with_option(insertProposal: InsertProposolaWithOption) -> Res
             insertProposal.spaceId,
         ),
     );
-    if let Some(options) = insertProposal.commaSeparatedOptions
-    {
-     let parts = options.split(",");
-        for part in parts {
-            let res3 = conn.execute(
-                "insert into ProposalOptions (Name, ProposalId)
-                VALUES (?1, (SELECT seq FROM SQLITE_SEQUENCE WHERE name='Proposals'));",
-                [part],
-            );
-            match res3 {
-                Ok(e) => continue,
-                Err(err) => {
-                    let _ = conn.execute("ROLLBACK;", []);
-                    return Err(Error::CanisterError {
-                        message: format!("{:?}", err),
-                    });
-                }
-            }
-        }
-    }
 
     let res4 = conn.execute(
         "
@@ -903,6 +1017,28 @@ fn insert_proposal_option_vote(vote: InsertProposalOptionVote) -> Result {
     };
 }
 
+
+
+#[update]
+fn insert_proposal_option(option: InsertProposalOption) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    return match conn.execute(
+        "insert into ProposalOptions(name, proposalid, onWinContractAddress, onWinBytecode, onWinChainId) values (?1, ?2, ?3, ?4, ?5);",
+        (
+            option.name,
+            option.proposalId,
+            option.onWinContractAddress,
+            option.onWinBytecode,
+            option.onWinChainId,
+        ),
+    ) {
+        Ok(e) => Ok(format!("{:?}", e)),
+        Err(err) => Err(Error::CanisterError {
+            message: format!("{:?}", err),
+        }),
+    };
+}
+
 #[update]
 fn insert_proposal_block(block: InsertProposalBlock) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
@@ -922,7 +1058,6 @@ fn insert_proposal_block(block: InsertProposalBlock) -> Result {
         }),
     };
 }
-
 
 #[update]
 fn insert_space_event(spaceEvents: SpaceEvent) -> Result {
@@ -964,7 +1099,6 @@ fn insert_space_event(spaceEvents: SpaceEvent) -> Result {
         }),
     };
 }
-
 
 #[update]
 fn delete_space(id: GetByIdParams) -> Result {
@@ -1041,7 +1175,7 @@ fn delete_space_event(id: GetByIdParams) -> Result {
             message: format!("{:?}", err),
         }),
     };
-} 
+}
 
 // #[update]
 // fn delete(id: usize) -> Result {
@@ -1116,7 +1250,9 @@ struct ProposalOption {
     id: u32,
     name: String,
     proposalId: u32,
-    // votes: Vec<ProposalOptionVote>,
+    onWinContractAddress: String,
+    onWinBytecode: String,
+    onWinChainId: u32,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
@@ -1192,7 +1328,6 @@ struct SpaceEvent {
     spaceId: u32,
 }
 
-
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct QueryParams {
     limit: u32,
@@ -1232,6 +1367,7 @@ struct InsertBtcStrategy {
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
 struct InsertEvmStrategy {
+    id: u32,
     name: String,
     description: String,
     spaceId: u32,
@@ -1241,13 +1377,20 @@ struct InsertEvmStrategy {
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
-struct InsertProposolaWithOption {
+struct InsertProposal {
     title: String,
     description: String,
     mechanism: u32,
     dateCreated: u32,
     spaceId: u32,
-    commaSeparatedOptions: Option<String>,
+}
+#[derive(CandidType, Debug, Serialize, Deserialize, Default)]
+struct InsertProposalOption {
+    name: String,
+    proposalId: u32,
+    onWinChainId: u64,
+    onWinContractAddress: String,
+    onWinBytecode: String,
 }
 
 #[derive(CandidType, Debug, Serialize, Deserialize, Default)]
