@@ -126,6 +126,7 @@ export interface _SERVICE {
     [GetByAdressAndIdParams],
     Result
   >,
+  'get_proposal_votes_by_proposal_id' : ActorMethod<[GetByIdParams], Result>,
   'get_proposals_with_voting_power_by_proposal_id' : ActorMethod<
     [GetByIdParams],
     Result

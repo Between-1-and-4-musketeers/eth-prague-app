@@ -419,6 +419,49 @@ fn get_proposal_option_by_user_adress_and_proposal_id(params: GetByAdressAndId) 
 }
 
 #[query]
+fn get_proposal_votes_by_proposal_id(params: GetByIdParams) -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    let mut stmt = match conn.prepare(
+        "
+        SELECT POV.Id, POV.UserAddress, POV.type, POV.timestamp, POV.signature, POV.VotingPower, POV.OptionId FROM
+        ProposalOptionVotes POV join ProposalOptions PO on POV.OptionId = PO.Id join Proposals P on PO.ProposalId = P.Id
+        WHERE P.Id = ?1
+    ",
+    ) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let proposals_iter = match stmt.query_map([params.id], |row| {
+        Ok(ProposalOptionVote {
+            id: row.get(0).unwrap(),
+            userAddress: row.get(1).unwrap(),
+            voteType: row.get(2).unwrap(),
+            timestamp: row.get(3).unwrap(),
+            signature: row.get(4).unwrap(),
+            votingPower: row.get(5).unwrap(),
+            optionId: row.get(6).unwrap(),
+        })
+    }) {
+        Ok(e) => e,
+        Err(err) => {
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            })
+        }
+    };
+    let mut proposals = Vec::new();
+    for proposal in proposals_iter {
+        proposals.push(proposal.unwrap());
+    }
+    let res = serde_json::to_string(&proposals).unwrap();
+    Ok(res)
+}
+
+#[query]
 fn get_all_btc_strategies_by_space_id(params: GetByIdParams) -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();
     let mut stmt = match conn.prepare(

@@ -94,6 +94,11 @@ export const idlFactory = ({ IDL }) => {
         [Result],
         ['query'],
       ),
+    'get_proposal_votes_by_proposal_id' : IDL.Func(
+        [GetByIdParams],
+        [Result],
+        ['query'],
+      ),
     'get_proposals_with_voting_power_by_proposal_id' : IDL.Func(
         [GetByIdParams],
         [Result],
