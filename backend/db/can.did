@@ -93,13 +93,20 @@ type GetEvmStrategy = record {
     configString: text;
 };
 
-type InsertProposolaWithOption = record {
+type InsertProposal = record {
     title: text;
     description: text;
     mechanism: nat32;
     dateCreated: nat32;
     spaceId: nat32;
-    commaSeparatedOptions: opt text;
+};
+
+type InsertProposalOption = record {
+    name: text;
+    proposalId: nat32;
+    onWinChainId: nat64;
+    onWinContractAddress: text;
+    onWinBytecode: text;
 };
 
 type InsertProposalOptionVote = record {
@@ -148,6 +155,7 @@ type ProposalOptionVote = record {
 service : {
     "create": () -> (Result);
     "drop": () -> (Result);
+    "alter": () -> (Result);
     "query_all_spaces": (QueryParams) -> (Result) query;
     "query_spaces_by_id": (GetByIdParams) -> (Result) query;
     "query_proposal_by_id": (GetByIdParams) -> (Result) query;
@@ -163,7 +171,8 @@ service : {
     "insert_space": (Space) -> (Result);
     "insert_btc_strategy": (InsertBtcStrategy) -> (Result);
     "insert_evm_strategy": (InsertEvmStrategy) -> (Result);
-    "insert_proposal_with_option": (InsertProposolaWithOption) -> (Result);
+    "insert_proposal": (InsertProposal) -> (Result);
+    "insert_proposal_option": (InsertProposalOption) -> (Result);
     "insert_proposal_option_vote": (InsertProposalOptionVote) -> (Result);
     "insert_proposal_block": (InsertProposalBlock) -> (Result);
     "insert_space_event": (SpaceEvent) -> (Result);

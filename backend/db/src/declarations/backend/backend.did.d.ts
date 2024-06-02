@@ -36,11 +36,25 @@ export interface InsertEvmStrategy {
   'chainId' : bigint,
   'contractAddress' : string,
 }
+export interface InsertProposal {
+  'title' : string,
+  'mechanism' : number,
+  'dateCreated' : number,
+  'description' : string,
+  'spaceId' : number,
+}
 export interface InsertProposalBlock {
   'blocknumber' : number,
   'voteType' : number,
   'chainId' : [] | [bigint],
   'proposalID' : number,
+}
+export interface InsertProposalOption {
+  'name' : string,
+  'onWinContractAddress' : string,
+  'proposalId' : number,
+  'onWinChainId' : bigint,
+  'onWinBytecode' : string,
 }
 export interface InsertProposalOptionVote {
   'signature' : string,
@@ -49,14 +63,6 @@ export interface InsertProposalOptionVote {
   'votingPower' : bigint,
   'userAddress' : string,
   'timestamp' : number,
-}
-export interface InsertProposolaWithOption {
-  'title' : string,
-  'mechanism' : number,
-  'dateCreated' : number,
-  'description' : string,
-  'spaceId' : number,
-  'commaSeparatedOptions' : [] | [string],
 }
 export interface Proposal {
   'id' : number,
@@ -109,6 +115,7 @@ export interface Strategy {
   'btcId' : number,
 }
 export interface _SERVICE {
+  'alter' : ActorMethod<[], Result>,
   'create' : ActorMethod<[], Result>,
   'delete_proposal' : ActorMethod<[GetByIdParams], Result>,
   'delete_proposal_block' : ActorMethod<[GetByIdParams], Result>,
@@ -134,13 +141,11 @@ export interface _SERVICE {
   >,
   'insert_btc_strategy' : ActorMethod<[InsertBtcStrategy], Result>,
   'insert_evm_strategy' : ActorMethod<[InsertEvmStrategy], Result>,
+  'insert_proposal' : ActorMethod<[InsertProposal], Result>,
   'insert_proposal_block' : ActorMethod<[InsertProposalBlock], Result>,
+  'insert_proposal_option' : ActorMethod<[InsertProposalOption], Result>,
   'insert_proposal_option_vote' : ActorMethod<
     [InsertProposalOptionVote],
-    Result
-  >,
-  'insert_proposal_with_option' : ActorMethod<
-    [InsertProposolaWithOption],
     Result
   >,
   'insert_space' : ActorMethod<[Space], Result>,
