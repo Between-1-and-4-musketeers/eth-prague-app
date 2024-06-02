@@ -1,5 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table"
-import { ProposalOptionVote } from "~/dummy/proposalOptionVotes"
+import { ProposalOptionVote } from "~/dummy/votes"
 import { Card } from "~/sushi-ui"
 import { DataTable } from "~/sushi-ui/components/data-table/index"
 import numeral from "numbro"
@@ -9,7 +9,7 @@ const COLUMNS: ColumnDef<ProposalOptionVote, unknown>[] = [
   {
     id: "option",
     header: "Option",
-    cell: ({ row }) => row.original.option.name
+    cell: ({ row }) => row.original.optionId
   },
   {
     id: "power",

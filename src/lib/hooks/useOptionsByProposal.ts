@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query"
-import { ProposalOption, dummyProposalOptions } from "~/dummy/options"
+import { ProposalOption, optionSchema } from "~/dummy/options"
 import { backendActor } from "~/service/actor-locator"
 import { parseDfinityResult } from "../parse-dfinity-result"
+import { z } from "zod"
 
 export function useOptionsByProposal(
   _proposalId: number | string | null | undefined
@@ -14,14 +15,13 @@ export function useOptionsByProposal(
   return useQuery<ProposalOption[]>({
     queryKey: ["options-by-proposal", proposalId],
     queryFn: async () => {
-      return dummyProposalOptions
-      // const result = await backendActor({
+      const result = await backendActor.get_proposal_options_by_proposal_id({
+        id: proposalId!
+      })
 
-      // })
+      const data = parseDfinityResult(result)
 
-      // const data = parseDfinityResult(result)
-
-      // return proposalSchema.parse(data)
+      return z.array(optionSchema).parse(data)
     },
     enabled: typeof proposalId === "number"
   })

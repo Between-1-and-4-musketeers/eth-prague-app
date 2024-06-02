@@ -65,7 +65,16 @@ type GetBtcStrategy = record {
     runeId: text;
 };
 
+type SpaceEvent = record {
+    id: nat32;
+    eventtype: nat32;
+    webhookUrl: text;
+    payload: text;
+    spaceId: nat32;
+};
+
 type InsertEvmStrategy = record {
+    id: nat32;
     name: text;
     description: text;
     spaceId: nat32;
@@ -85,13 +94,20 @@ type GetEvmStrategy = record {
     configString: text;
 };
 
-type InsertProposolaWithOption = record {
+type InsertProposal = record {
     title: text;
     description: text;
     mechanism: nat32;
     dateCreated: nat32;
     spaceId: nat32;
-    commaSeparatedOptions: text;
+};
+
+type InsertProposalOption = record {
+    name: text;
+    proposalId: nat32;
+    onWinChainId: nat64;
+    onWinContractAddress: text;
+    onWinBytecode: text;
 };
 
 type InsertProposalOptionVote = record {
@@ -139,25 +155,34 @@ type ProposalOptionVote = record {
 
 service : {
     "create": () -> (Result);
+    "seed_data": () -> (Result);
     "drop": () -> (Result);
+    "alter": () -> (Result);
     "query_all_spaces": (QueryParams) -> (Result) query;
     "query_spaces_by_id": (GetByIdParams) -> (Result) query;
     "query_proposal_by_id": (GetByIdParams) -> (Result) query;
     "query_proposals_by_space_id": (GetByIdParams) -> (Result) query;
     "get_proposals_with_voting_power_by_proposal_id": (GetByIdParams) -> (Result) query;
     "get_proposal_option_by_user_adress_and_proposal_id": (GetByAdressAndIdParams) -> (Result) query;
+    "get_proposal_options_by_proposal_id": (GetByIdParams) -> (Result) query;
     "get_all_btc_strategies_by_space_id": (GetByIdParams) -> (Result) query;
     "get_all_evm_strategies_by_space_id": (GetByIdParams) -> (Result) query;
+    "get_all_space_events_by_space_id":(GetByIdParams) -> (Result) query;
+    "get_proposal_votes_by_proposal_id":(GetByIdParams) -> (Result) query;
+    "get_all_space_events":() -> (Result) query;
     "insert_space": (Space) -> (Result);
     "insert_btc_strategy": (InsertBtcStrategy) -> (Result);
     "insert_evm_strategy": (InsertEvmStrategy) -> (Result);
-    "insert_proposal_with_option": (InsertProposolaWithOption) -> (Result);
+    "insert_proposal": (InsertProposal) -> (Result);
+    "insert_proposal_option": (InsertProposalOption) -> (Result);
     "insert_proposal_option_vote": (InsertProposalOptionVote) -> (Result);
     "insert_proposal_block": (InsertProposalBlock) -> (Result);
+    "insert_space_event": (SpaceEvent) -> (Result);
     "delete_space": (GetByIdParams) -> (Result);
     "delete_proposal": (GetByIdParams) -> (Result);
     "delete_proposal_option": (GetByIdParams) -> (Result);
     "delete_proposal_option_vote": (GetByIdParams) -> (Result);
     "delete_strategy": (GetByIdParams) -> (Result);
     "delete_proposal_block": (GetByIdParams) -> (Result);
+    "delete_space_event": (GetByIdParams) -> (Result);
 }

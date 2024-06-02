@@ -1,5 +1,5 @@
 import { useConnectModal } from "@rainbow-me/rainbowkit"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import numbro from "numbro"
 import React, { useCallback, useState } from "react"
 import { Address } from "viem"
@@ -8,6 +8,7 @@ import { ProposalOption } from "~/dummy/options"
 import { Proposal } from "~/dummy/proposals"
 import { Space } from "~/dummy/spaces"
 import { Type } from "~/dummy/type"
+import { useVotingPower } from "~/lib/hooks/useVotingPower"
 import { shortenAddress } from "~/lib/shortenAddress"
 import {
   Button,
@@ -33,7 +34,6 @@ interface VoteModalProps {
 
 type EvmVote = {
   spaceId: number
-  proposalId: number
   optionId: number
   address: Address
   signature: string
@@ -52,34 +52,47 @@ function EvmVote({
   const { openConnectModal } = useConnectModal()
   const { refetchQueries } = useQueryClient()
 
-  const { data: power, isLoading } = useQuery({
-    queryKey: [space.id, proposal.id, address, "power"],
-    queryFn: async () => {
-      return 100
-    },
-    enabled: isConnected
+  const { data: power, isLoading } = useVotingPower({
+    spaceId: space.id,
+    voter: address!
   })
 
   const { mutate } = useMutation<void, Error, EvmVote>({
     mutationKey: [space.id, proposal.id, option.name, "vote"],
     mutationFn: async params => {
-      console.log(params)
+      const url = process.env.NEXT_PUBLIC_BACKEND_API + "/api/vote"
+
+      await fetch(url, {
+        method: "POST",
+        mode: "cors",
+        body: JSON.stringify({
+          message: {
+            spaceId: params.spaceId,
+            optionId: params.optionId,
+            address: params.address
+          },
+          signature: params.signature
+        }),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+
       return
     },
     onSuccess: () => {
       refetchQueries({
-        exact: true,
-        queryKey: ["votes-by-proposal", proposal.id]
+        exact: false,
+        queryKey: ["votes-by-proposal"]
       })
     }
   })
 
   const { signMessage } = useSignMessage({
     mutation: {
-      onSuccess: signature => {
+      onSuccess: async signature => {
         mutate({
           spaceId: space.id,
-          proposalId: proposal.id,
           optionId: option.id,
           address: address!,
           signature: signature
@@ -89,15 +102,16 @@ function EvmVote({
   })
 
   const sign = useCallback(() => {
-    signMessage({
-      message: JSON.stringify({
-        space: space.id,
-        proposal: proposal.id,
-        option: option.id,
-        address: address!
-      })
+    const message = JSON.stringify({
+      spaceId: space.id,
+      optionId: option.id,
+      address: address!
     })
-  }, [address, option.id, proposal.id, signMessage, space.id])
+
+    signMessage({
+      message
+    })
+  }, [address, option.id, signMessage, space.id])
 
   if (!isConnected)
     return (
@@ -114,7 +128,11 @@ function EvmVote({
             {shortenAddress(address!)}
           </List.KeyValue>
           <List.KeyValue title="Power">
-            {isLoading ? <SkeletonText /> : numbro(power).format("0.00a")}
+            {isLoading ? (
+              <SkeletonText />
+            ) : (
+              numbro(Number(power)).format("0.00a")
+            )}
           </List.KeyValue>
         </List.Control>
       </List>

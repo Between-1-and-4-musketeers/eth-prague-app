@@ -18,9 +18,9 @@ function Event({ event }: { event: Event }) {
           <h2 className="text-lg">{event.eventType}</h2>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-between w-full">
+          <div className="flex justify-between w-full space-x-4">
             <div>Webhook</div>
-            <div>{event.webhookUrl}</div>
+            <div className="text-right">{event.webhookUrl}</div>
           </div>
           <div className="w-full space-y-1">
             <div className="flex justify-between w-full">

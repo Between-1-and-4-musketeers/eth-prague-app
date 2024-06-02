@@ -1,3 +1,5 @@
+import { z } from "zod"
+
 export enum EventType {
   ON_PROPOSAL_CREATED = "ON_PROPOSAL_CREATED",
   ON_PROPOSAL_ENDED = "ON_PROPOSAL_ENDED",
@@ -9,20 +11,41 @@ export type Event = {
   eventType: EventType
   webhookUrl: string
   payload: string
+  spaceId: number
 }
+
+export const eventSchema = z
+  .object({
+    id: z.number(),
+    eventtype: z.number().transform(x => {
+      if (x === 0) return EventType.ON_PROPOSAL_CREATED
+      if (x === 1) return EventType.ON_PROPOSAL_ENDED
+      if (x === 2) return EventType.ON_VOTE
+      return EventType.ON_PROPOSAL_CREATED
+    }),
+    spaceId: z.number(),
+    webhookUrl: z.string(),
+    payload: z.string()
+  })
+  .transform(event => ({
+    ...event,
+    eventType: event.eventtype
+  }))
 
 export const dummyEvents: Event[] = [
   {
     id: 0,
     eventType: EventType.ON_PROPOSAL_CREATED,
     webhookUrl: "http://localhost:3000",
-    payload: "proposal created"
+    payload: "proposal created",
+    spaceId: 0
   },
   {
     id: 1,
     eventType: EventType.ON_PROPOSAL_ENDED,
     webhookUrl: "http://localhost:3000",
-    payload: "proposal ended"
+    payload: "proposal ended",
+    spaceId: 0
   },
   {
     id: 2,
@@ -61,6 +84,7 @@ export const dummyEvents: Event[] = [
         }
       ],
       "attachments": []
-    }`
+    }`,
+    spaceId: 0
   }
 ]

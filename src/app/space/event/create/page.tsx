@@ -29,7 +29,21 @@ export default function CreateEvent() {
   const { mutate } = useMutation<void, Error, NewEvent>({
     mutationKey: ["createEvent"],
     mutationFn: async ({ webhookUrl, payload, eventType, spaceId }) => {
-      console.log(webhookUrl, payload, eventType, spaceId)
+      const url = process.env.NEXT_PUBLIC_BACKEND_API + "/api/event"
+
+      await fetch(url, {
+        method: "POST",
+        mode: "cors",
+        body: JSON.stringify({
+          webhookUrl,
+          payload,
+          eventType: Object.keys(EventType).indexOf(eventType),
+          spaceId
+        }),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
     },
     onSuccess: () => {
       router.push(`/space?spaceId=${params.get("spaceId")}`)

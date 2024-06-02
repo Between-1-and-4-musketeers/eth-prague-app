@@ -25,9 +25,13 @@ export default function SpacePage() {
     params.get("proposalId")
   )
 
-  const { data: votes, isInitialLoading: isVotesLoading } = useVotesByProposal(
-    params.get("proposalId")
-  )
+  const {
+    data: votes,
+    isInitialLoading: isVotesLoading,
+    error
+  } = useVotesByProposal(params.get("proposalId"))
+
+  console.log(votes, error)
 
   const { data: options, isInitialLoading: isOptionsLoading } =
     useOptionsByProposal(params.get("proposalId"))
