@@ -74,6 +74,7 @@ type SpaceEvent = record {
 };
 
 type InsertEvmStrategy = record {
+    id: nat32;
     name: text;
     description: text;
     spaceId: nat32;
@@ -154,6 +155,7 @@ type ProposalOptionVote = record {
 
 service : {
     "create": () -> (Result);
+    "seed_data": () -> (Result);
     "drop": () -> (Result);
     "alter": () -> (Result);
     "query_all_spaces": (QueryParams) -> (Result) query;
