@@ -150,6 +150,7 @@ export interface _SERVICE {
   'query_proposal_by_id' : ActorMethod<[GetByIdParams], Result>,
   'query_proposals_by_space_id' : ActorMethod<[GetByIdParams], Result>,
   'query_spaces_by_id' : ActorMethod<[GetByIdParams], Result>,
+  'seed_data' : ActorMethod<[], Result>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

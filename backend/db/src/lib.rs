@@ -144,6 +144,72 @@ fn create() -> Result {
     };
 }
 
+
+#[update]
+fn seed_data() -> Result {
+    let conn = ic_sqlite::CONN.lock().unwrap();
+    // return match conn.execute("DROP TABLE Spaces", [])
+    return match conn.execute_batch(
+       "
+       BEGIN TRANSACTION;
+        insert into Spaces(id,name, iconlink, websitelink, minvoterole, minvotepower, votedelay, voteduration, quorum)
+            values (1,'FrajerCZ','https://pbs.twimg.com/profile_images/1528083447973138432/mzJJ6iaf_400x400.jpg',
+                    'https://x.com/ReformedRamsay',0,0,100000,10000,100);
+        insert into Spaces(id,name, iconlink, websitelink, minvoterole, minvotepower, votedelay, voteduration, quorum)
+            values (2,'Sushi','https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIwIAmAKD59SQKJIe3wA_s_OQXLqmYYZAO0Q&s',
+                    'sushi.com',2,2,2,2,2);
+
+        insert into EvmStrategies(chainid, contractaddress, configstring)
+        values (1,'0x6B3595068778DD592e39A122f4f5a5cF09C90fE2','0x70a08231000000000000000000000000$voterAddress');
+
+        INSERT INTO Strategies(Id,Name, SpaceId, EvmId)
+        VALUES (1,'sushak', 1,
+                (SELECT seq FROM SQLITE_SEQUENCE WHERE name = 'EvmStrategies'));
+
+
+        insert into SpaceEvents(Id,eventtype, webhookurl, payload, spaceid)
+        values (1,
+                0,
+                'https://discord.com/api/webhooks/1246613644213751828/AtvEBGU7OPtQ97jAM-ZW7A_GBCiy-sGu5bpHJSSFrLnxjSuqFckec0_VjPfj85u7ByA_',
+                '{ \"content\": \"Ahoj!\\nPepa s adresou ${voterAddress} prave votoval se silou ${power} CO DOPICE?! s😁😁\", \"embeds\": null, \"attachments\": [] }',
+                1);
+
+        insert into Proposals(id,title, description, mechanism, datecreated, spaceid)
+        values(2,'jo ?','pls vote',2,2,2);
+
+        insert into Proposals(id,title, description, mechanism, datecreated, spaceid)
+        values(1,'jit spat','chrr pspps lufi spi!',0,1717286697,1);
+
+        insert into ProposalOptions(id,name, proposalid)
+        values (3,'a',2);
+        insert into ProposalOptions(id,name, proposalid)
+        values (4,'b',2);
+        insert into ProposalOptions(id,name, proposalid)
+        values (5,'c',2);
+
+        insert into ProposalOptions(id,name,proposalid)
+        values (1,'Ano',1);
+        insert into ProposalOptions(id,name,proposalid)
+        values (2,'Ne',1);
+
+        insert into ProposalOptionVotes(id,UserAddress,type,timestamp,signature,VotingPower,OptionId)
+        values (1,'ahoj',1,2,'a',2,1);
+        insert into ProposalOptionVotes(id,UserAddress,type,timestamp,signature,VotingPower,OptionId)
+        values (2,'0xdc84b5f5957290e27daf8c0976d77b5af45baaaa',0,1717287836,'0x72085ce618d2a7641a65ea2331b29b18c3c662eb450a20abf4221c952eeee1fe00e3c7867ec6e93bcd1234b3941e53e3ddfcba9e2ed676b9bdd5064eebaee32b1c',3,2);
+        COMMIT;"
+    )
+    {
+        Ok(e) => Ok(format!("{:?}", e)),
+        Err(err) => {
+            let _ = conn.execute("ROLLBACK;", []);
+            return Err(Error::CanisterError {
+                message: format!("{:?}", err),
+            });
+        }
+    };
+}
+
+
 #[update]
 fn drop() -> Result {
     let conn = ic_sqlite::CONN.lock().unwrap();

@@ -148,6 +148,7 @@ type ProposalOptionVote = record {
 
 service : {
     "create": () -> (Result);
+    "seed_data": () -> (Result);
     "drop": () -> (Result);
     "query_all_spaces": (QueryParams) -> (Result) query;
     "query_spaces_by_id": (GetByIdParams) -> (Result) query;

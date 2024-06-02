@@ -133,6 +133,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'query_spaces_by_id' : IDL.Func([GetByIdParams], [Result], ['query']),
+    'seed_data' : IDL.Func([], [Result], []),
   });
 };
 export const init = ({ IDL }) => { return []; };
