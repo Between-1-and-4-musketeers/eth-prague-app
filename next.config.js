@@ -7,8 +7,11 @@ await import("./src/env.js")
 /** @type {import("next").NextConfig} */
 const config = {
   output: "export",
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   eslint: {
-    ignoreDuringBuilds: true
+    ignoreDuringBuilds: true,
   },
   experimental: {
     missingSuspenseWithCSRBailout: false

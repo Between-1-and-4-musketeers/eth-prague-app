@@ -80,3 +80,9 @@ dfx deploy
 ```
 
 And you should be good to go! The UI should be available at the link you get in the terminal.
+
+
+## Links 
+App deploy: https://fgysu-kqaaa-aaaag-albxq-cai.icp0.io/
+Db deploy: https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=fbzua-hiaaa-aaaag-albxa-cai
+Backend deploy: https://qiz7r-fqaaa-aaaal-ajh4a-cai.raw.icp0.io/
