@@ -56,7 +56,7 @@ export interface InsertProposolaWithOption {
   'dateCreated' : number,
   'description' : string,
   'spaceId' : number,
-  'commaSeparatedOptions' : string,
+  'commaSeparatedOptions' : [] | [string],
 }
 export interface Proposal {
   'id' : number,
@@ -126,6 +126,7 @@ export interface _SERVICE {
     [GetByAdressAndIdParams],
     Result
   >,
+  'get_proposal_options_by_proposal_id' : ActorMethod<[GetByIdParams], Result>,
   'get_proposal_votes_by_proposal_id' : ActorMethod<[GetByIdParams], Result>,
   'get_proposals_with_voting_power_by_proposal_id' : ActorMethod<
     [GetByIdParams],
